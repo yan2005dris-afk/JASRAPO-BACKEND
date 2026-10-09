@@ -10,7 +10,7 @@ import { RemoveClientUseCase } from './use-cases/remove-client.use-case';
 import { buildClientFilters } from './mappers/client-filters.mapper';
 import type { IdentificationTypeRef } from '../domain/types/client.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import type { ClientEntity } from '../domain/entities/client.entity';
+import type { ClientRow } from '../infrastructure/repositories/client.include';
 
 @Injectable()
 export class ClientService {
@@ -28,7 +28,7 @@ export class ClientService {
 
   async findAll(
     filters?: FilterClientDto,
-  ): Promise<PaginatedResult<ClientEntity>> {
+  ): Promise<PaginatedResult<ClientRow>> {
     const clientFilters = filters ? buildClientFilters(filters) : undefined;
 
     return this.clientRepository.paginateClientes(
@@ -40,15 +40,15 @@ export class ClientService {
     );
   }
 
-  async findOne(id: bigint): Promise<ClientEntity> {
+  async findOne(id: bigint): Promise<ClientRow> {
     return this.findOneUseCase.execute(id);
   }
 
-  async update(id: bigint, dto: UpdateClientDto): Promise<ClientEntity> {
+  async update(id: bigint, dto: UpdateClientDto): Promise<ClientRow> {
     return this.updateUseCase.execute(id, dto);
   }
 
-  async delete(id: bigint): Promise<ClientEntity> {
+  async delete(id: bigint): Promise<ClientRow> {
     return this.removeUseCase.execute(id);
   }
 

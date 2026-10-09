@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { FindWorkOrderNoveltyUseCase } from './find-work-order-novelty.use-case';
 import { WORK_ORDER_NOVELTY_REPOSITORY } from '../../domain/repositories/work-order-novelty.repository';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import { workOrderNoveltyRow } from '../../__test-utils__/work-order-novelty-row.factory';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 
 describe('FindWorkOrderNoveltyUseCase', () => {
@@ -23,7 +23,7 @@ describe('FindWorkOrderNoveltyUseCase', () => {
   });
 
   it('returns the novelty when present', async () => {
-    const entity = new WorkOrderNoveltyEntity({
+    const entity = workOrderNoveltyRow({
       novedadId: 42n,
       ordenTrabajoId: 10n,
       tipo: TipoAnomalia.FUGA,

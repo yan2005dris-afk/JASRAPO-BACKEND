@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetEligibleReadingsUseCase } from './get-eligible-readings.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
+import { readingForRouteRow } from '../../__test-utils__/route-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -83,13 +83,8 @@ describe('GetEligibleReadingsUseCase', () => {
   it('should delegate to paginateLecturas with criteria and return paginated data', async () => {
     mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
 
-    const mappedEntity = new ReadingForRouteEntity({
+    const mappedEntity = readingForRouteRow({
       lecturaId: 10n,
-      guia: 'G-123',
-      clienteNombre: 'Juan Perez',
-      direccion: 'Dir 1',
-      sector: 'Sector 1',
-      estadoContrato: 'ACTIVO',
     });
 
     mockRouteRepository.paginateLecturas.mockResolvedValue({
@@ -126,6 +121,5 @@ describe('GetEligibleReadingsUseCase', () => {
     expect(result.meta.total).toBe(1);
     expect(result.data).toHaveLength(1);
     expect(result.data[0].lecturaId).toBe(10n);
-    expect(result.data[0].clienteNombre).toBe('Juan Perez');
   });
 });

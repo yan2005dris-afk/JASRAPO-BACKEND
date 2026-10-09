@@ -5,7 +5,7 @@ import { WORK_ORDER_NOVELTY_REPOSITORY } from '../../domain/repositories/work-or
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { NoveltyEvidenceQueueService } from '../../infrastructure/novelty-evidence-queue.service';
 import { FindWorkOrderNoveltyUseCase } from './find-work-order-novelty.use-case';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import { workOrderNoveltyRow } from '../../__test-utils__/work-order-novelty-row.factory';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 
 describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
@@ -42,7 +42,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
   });
 
   it('soft deletes and enqueues an evidence cleanup job', async () => {
-    const existing = new WorkOrderNoveltyEntity({
+    const existing = workOrderNoveltyRow({
       novedadId: 1n,
       ordenTrabajoId: 10n,
       estado: EstadoNovedad.OPEN,
@@ -50,7 +50,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
     });
     findUseCaseMock.execute.mockResolvedValue(existing);
     repoMock.softDelete.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         ...existing,
         deletedAt: new Date(),
       }),
@@ -66,7 +66,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
   });
 
   it('does not enqueue when the novelty has no fotoUrl', async () => {
-    const existing = new WorkOrderNoveltyEntity({
+    const existing = workOrderNoveltyRow({
       novedadId: 1n,
       ordenTrabajoId: 10n,
       estado: EstadoNovedad.OPEN,
@@ -74,7 +74,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
     });
     findUseCaseMock.execute.mockResolvedValue(existing);
     repoMock.softDelete.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         ...existing,
         deletedAt: new Date(),
       }),
@@ -85,7 +85,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
   });
 
   it('soft delete succeeds even when enqueue throws', async () => {
-    const existing = new WorkOrderNoveltyEntity({
+    const existing = workOrderNoveltyRow({
       novedadId: 1n,
       ordenTrabajoId: 10n,
       estado: EstadoNovedad.OPEN,
@@ -93,7 +93,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
     });
     findUseCaseMock.execute.mockResolvedValue(existing);
     repoMock.softDelete.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         ...existing,
         deletedAt: new Date(),
       }),
@@ -119,7 +119,7 @@ describe('SoftDeleteWorkOrderNoveltyUseCase', () => {
 
   it('throws when the novelty is already deleted', async () => {
     findUseCaseMock.execute.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         novedadId: 1n,
         ordenTrabajoId: 10n,
         estado: EstadoNovedad.OPEN,

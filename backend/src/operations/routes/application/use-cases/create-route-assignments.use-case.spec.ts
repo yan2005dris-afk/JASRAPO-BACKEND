@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateRouteAssignmentsUseCase } from './create-route-assignments.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import { routeRow } from '../../__test-utils__/route-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -136,7 +136,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
-    const createdRoute = new RouteEntity({
+    const createdRoute = routeRow({
       rutaId: 10n,
       nombre: 'Ruta Lectura - Comunidad 1',
       operarioId: 1,
@@ -214,7 +214,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
       });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
-    const route1 = new RouteEntity({
+    const route1 = routeRow({
       rutaId: 101n,
       nombre: 'Ruta - Barrio Norte',
       operarioId: 1,
@@ -226,7 +226,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
       fechaInicio: null,
       fechaFin: null,
     });
-    const route2 = new RouteEntity({
+    const route2 = routeRow({
       rutaId: 102n,
       nombre: 'Ruta - Barrio Sur',
       operarioId: 1,
@@ -276,7 +276,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
       { contratoId: 20, numeroGuia: 'CTR-002', comunidadId: 1 },
     ]);
 
-    const createdRoute = new RouteEntity({
+    const createdRoute = routeRow({
       rutaId: 50n,
       nombre: 'Ruta Inspección - Contratos CTR-001, CTR-002',
       operarioId: 1,
@@ -326,7 +326,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
       nombre: 'Sector A',
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
-      new RouteEntity({
+      routeRow({
         rutaId: 99n,
         nombre: 'Ruta Existente',
         operarioId: 2,
@@ -361,7 +361,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
       estado: 'ABIERTO',
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
-      new RouteEntity({
+      routeRow({
         rutaId: 99n,
         nombre: 'Ruta Existente Comunidad',
         operarioId: 2,
@@ -400,7 +400,7 @@ describe('CreateRouteAssignmentsUseCase', () => {
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
     mockRouteRepository.create.mockResolvedValue(
-      new RouteEntity({
+      routeRow({
         rutaId: 101n,
         nombre: 'Ruta - Sector Único',
         operarioId: 1,

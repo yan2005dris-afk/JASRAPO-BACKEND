@@ -11,8 +11,8 @@ import {
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { ClientEntity } from '../../domain/entities/client.entity';
-import { ClientMapper } from '../mappers/client.mapper';
+import type { ClientRow } from './client.include';
+import { clientInclude } from './client.include';
 import type {
   CreateClientData,
   UpdateClientData,
@@ -28,34 +28,27 @@ const CONSUMIDOR_FINAL_IDENTIFICACION = '9999999999999';
 
 @Injectable()
 export class PrismaClientRepository implements ClientRepository {
-  /** Include object to always fetch the tipoIdentificacion relation */
-  private readonly defaultInclude = {
-    tipoIdentificacion: true,
-  } satisfies Prisma.ClientesInclude;
-
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(id: bigint): Promise<ClientEntity | null> {
-    const record = await this.prisma.clientes.findFirst({
+  async findById(id: bigint): Promise<ClientRow | null> {
+    return this.prisma.clientes.findFirst({
       where: { clienteId: id, deletedAt: null },
-      include: this.defaultInclude,
+      include: clientInclude,
     });
-    return ClientMapper.toDomain(record);
   }
 
   async findByIdentificacion(
     identificacion: string,
-  ): Promise<ClientEntity | null> {
-    const record = await this.prisma.clientes.findUnique({
+  ): Promise<ClientRow | null> {
+    return this.prisma.clientes.findUnique({
       where: { identificacion },
-      include: this.defaultInclude,
+      include: clientInclude,
     });
-    return ClientMapper.toDomain(record);
   }
 
-  async create(data: CreateClientData): Promise<ClientEntity> {
+  async create(data: CreateClientData): Promise<ClientRow> {
     try {
-      const record = await this.prisma.clientes.create({
+      return await this.prisma.clientes.create({
         data: {
           identificacion: data.identificacion,
           tipoIdentificacion: {
@@ -71,9 +64,8 @@ export class PrismaClientRepository implements ClientRepository {
           aplicaTerceraEdad: data.aplicaTerceraEdad,
           aplicaDiscapacidad: data.aplicaDiscapacidad,
         },
-        include: this.defaultInclude,
+        include: clientInclude,
       });
-      return ClientMapper.toDomain(record)!;
     } catch (error) {
       if (this.isUniqueViolation(error)) {
         throw new EntityAlreadyExistsException(
@@ -86,10 +78,7 @@ export class PrismaClientRepository implements ClientRepository {
     }
   }
 
-  async updateClient(
-    id: bigint,
-    data: UpdateClientData,
-  ): Promise<ClientEntity> {
+  async updateClient(id: bigint, data: UpdateClientData): Promise<ClientRow> {
     const updateData: Prisma.ClientesUpdateInput = {};
 
     if (data.tipoIdentificacionId !== undefined) {
@@ -116,12 +105,11 @@ export class PrismaClientRepository implements ClientRepository {
     if (data.deletedAt !== undefined) updateData.deletedAt = data.deletedAt;
 
     try {
-      const record = await this.prisma.clientes.update({
+      return await this.prisma.clientes.update({
         where: { clienteId: id },
         data: updateData,
-        include: this.defaultInclude,
+        include: clientInclude,
       });
-      return ClientMapper.toDomain(record)!;
     } catch (error) {
       if (this.isRecordNotFound(error)) {
         throw new EntityNotFoundException('Cliente', id);
@@ -130,14 +118,13 @@ export class PrismaClientRepository implements ClientRepository {
     }
   }
 
-  async softDelete(id: bigint): Promise<ClientEntity> {
+  async softDelete(id: bigint): Promise<ClientRow> {
     try {
-      const record = await this.prisma.clientes.update({
+      return await this.prisma.clientes.update({
         where: { clienteId: id },
         data: { deletedAt: new Date() },
-        include: this.defaultInclude,
+        include: clientInclude,
       });
-      return ClientMapper.toDomain(record)!;
     } catch (error) {
       if (this.isRecordNotFound(error)) {
         throw new EntityNotFoundException('Cliente', id);
@@ -170,8 +157,8 @@ export class PrismaClientRepository implements ClientRepository {
    */
   async reactivateOrCreateConsumidorFinal(
     data: ConsumidorFinalData,
-  ): Promise<ClientEntity> {
-    const record = await this.prisma.$transaction(async (tx) => {
+  ): Promise<ClientRow> {
+    return this.prisma.$transaction(async (tx) => {
       const consumidores = await tx.clientes.findMany({
         where: { tipoIdentificacionId: CONSUMIDOR_FINAL_TIPO_ID },
         orderBy: { createdAt: 'asc' },
@@ -206,7 +193,7 @@ export class PrismaClientRepository implements ClientRepository {
             aplicaDiscapacidad: false,
             deletedAt: null,
           },
-          include: this.defaultInclude,
+          include: clientInclude,
         });
       }
 
@@ -226,11 +213,9 @@ export class PrismaClientRepository implements ClientRepository {
           aplicaTerceraEdad: false,
           aplicaDiscapacidad: false,
         },
-        include: this.defaultInclude,
+        include: clientInclude,
       });
     });
-
-    return ClientMapper.toDomain(record)!;
   }
 
   async paginateClientes(
@@ -239,7 +224,7 @@ export class PrismaClientRepository implements ClientRepository {
       orderBy?: Record<string, any>;
     },
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ClientEntity>> {
+  ): Promise<PaginatedResult<ClientRow>> {
     const where = this.buildClientWhere(args.filters);
 
     const result = await paginate<any>(
@@ -247,13 +232,13 @@ export class PrismaClientRepository implements ClientRepository {
       {
         where,
         orderBy: args.orderBy as Prisma.ClientesOrderByWithRelationInput,
-        include: this.defaultInclude,
+        include: clientInclude,
       },
       pagination,
     );
 
     return {
-      data: ClientMapper.toDomainList(result.data),
+      data: result.data,
       meta: result.meta,
     };
   }

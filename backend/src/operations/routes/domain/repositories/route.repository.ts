@@ -1,7 +1,9 @@
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import type { RouteEntity } from '../entities/route.entity';
-import type { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
+import type {
+  RouteRow,
+  ReadingForRouteRow,
+} from '../../infrastructure/repositories/route.include';
 import type {
   CreateRouteData,
   UpdateRouteData,
@@ -69,24 +71,24 @@ export abstract class RouteRepository {
   abstract findById(
     rutaId: bigint,
     includeDeleted?: boolean,
-  ): Promise<RouteEntity | null>;
+  ): Promise<RouteRow | null>;
 
   abstract paginateRutas(
     filters: RouteFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<RouteEntity>>;
+  ): Promise<PaginatedResult<RouteRow>>;
 
-  abstract create(data: CreateRouteData): Promise<RouteEntity>;
+  abstract create(data: CreateRouteData): Promise<RouteRow>;
 
-  abstract update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity>;
+  abstract update(rutaId: bigint, data: UpdateRouteData): Promise<RouteRow>;
 
   abstract updateWithReadingKpis(
     rutaId: bigint,
     expectedEstado: string,
     data: UpdateRouteData,
-  ): Promise<RouteEntity>;
+  ): Promise<RouteRow>;
 
-  abstract softDelete(rutaId: bigint): Promise<RouteEntity>;
+  abstract softDelete(rutaId: bigint): Promise<RouteRow>;
 
   abstract findUsuario(
     usuarioId: number,
@@ -108,7 +110,7 @@ export abstract class RouteRepository {
     periodoId: number,
     sectorId?: number,
     tipoRuta?: string,
-  ): Promise<RouteEntity[]>;
+  ): Promise<RouteRow[]>;
 
   abstract initializeMonthlyReadings(
     comunidadId: number,
@@ -121,12 +123,12 @@ export abstract class RouteRepository {
   abstract paginateLecturas(
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ReadingForRouteEntity>>;
+  ): Promise<PaginatedResult<ReadingForRouteRow>>;
 
   abstract paginateLecturasByRutaId(
     rutaId: bigint,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>>;
+  ): Promise<PaginatedResult<ReadingForRouteRow, LecturaKpis>>;
 
   abstract getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis>;
 

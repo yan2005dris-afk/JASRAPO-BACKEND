@@ -19,7 +19,7 @@ import { RouteRepository } from '../../routes/domain/repositories/route.reposito
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
-import { RouteEntity } from '../../routes/domain/entities/route.entity';
+import type { RouteRow } from '../../routes/infrastructure/repositories/route.include';
 import type { IServiceArea } from '../domain/types/service-area.types';
 
 @Injectable()
@@ -86,7 +86,7 @@ export class ContratoMedidorService {
   async assignInstallationRoute(
     contratoId: bigint,
     dto: AssignInstallationRouteDto,
-  ): Promise<RouteEntity> {
+  ): Promise<RouteRow> {
     const rutaId = await this.ordenTrabajoRepository.assignInstallationRoute(
       contratoId,
       dto.routeId != null ? BigInt(dto.routeId) : undefined,

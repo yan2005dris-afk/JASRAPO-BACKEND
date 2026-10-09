@@ -1,4 +1,4 @@
-import type { OrdenTrabajoEntity } from '../entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
 import type {
   OrdenTrabajoFilters,
   OrdenTrabajoKpis,
@@ -19,18 +19,18 @@ export abstract class OrdenTrabajoRepository {
   abstract findById(
     ordenTrabajoId: bigint,
     includeDeleted?: boolean,
-  ): Promise<OrdenTrabajoEntity | null>;
+  ): Promise<OrdenTrabajoRow | null>;
 
   abstract findByRutaId(
     rutaId: bigint,
     filters: OrdenTrabajoFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<OrdenTrabajoEntity, OrdenTrabajoKpis>>;
+  ): Promise<PaginatedResult<OrdenTrabajoRow, OrdenTrabajoKpis>>;
 
   abstract updateEstado(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
-  ): Promise<OrdenTrabajoEntity>;
+  ): Promise<OrdenTrabajoRow>;
 
   abstract verifyOperatorWorkOrderOwnership(
     operarioId: number,
@@ -40,7 +40,7 @@ export abstract class OrdenTrabajoRepository {
   abstract updateOperatorWorkOrder(
     ordenTrabajoId: bigint,
     data: UpdateOperatorWorkOrderData,
-  ): Promise<OrdenTrabajoEntity>;
+  ): Promise<OrdenTrabajoRow>;
 
   /**
    * Vincula una lectura existente a una orden de trabajo.
@@ -57,11 +57,11 @@ export abstract class OrdenTrabajoRepository {
   abstract linkLectura(
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
-  ): Promise<OrdenTrabajoEntity>;
+  ): Promise<OrdenTrabajoRow>;
 
   /**
    * Crea una nueva orden de trabajo asociada a una ruta existente.
    * Usado por el flujo "Asignar contrato a ruta de instalación" (SC-174).
    */
-  abstract create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity>;
+  abstract create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoRow>;
 }

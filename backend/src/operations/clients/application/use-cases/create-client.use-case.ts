@@ -6,7 +6,7 @@ import { TerceraEdadService } from '../services/tercera-edad.service';
 import type { CreateClientData } from '../../domain/types/client.types';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
-import type { ClientEntity } from '../../domain/entities/client.entity';
+import type { ClientRow } from '../../infrastructure/repositories/client.include';
 
 /** ID of CONSUMIDOR_FINAL in `catalogo_tipos_identificacion` */
 const CONSUMIDOR_FINAL_TIPO_ID = 4;
@@ -18,7 +18,7 @@ export class CreateClientUseCase {
     private readonly terceraEdadService: TerceraEdadService,
   ) {}
 
-  async execute(dto: CreateClientDto): Promise<ClientEntity> {
+  async execute(dto: CreateClientDto): Promise<ClientRow> {
     // CONSUMIDOR_FINAL: the singleton invariant is enforced by the repository
     if (dto.tipoIdentificacionId === CONSUMIDOR_FINAL_TIPO_ID) {
       return this.clientRepository.reactivateOrCreateConsumidorFinal({

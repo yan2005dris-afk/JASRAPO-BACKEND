@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { CreateRouteDto } from '../../interfaces/dto/create-route.dto';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import type { CreateRouteData } from '../../domain/types/route.types';
 import { TipoActividadCodes } from 'src/shared/enums';
 import {
@@ -19,7 +19,7 @@ const WORK_ORDER_TYPES = new Set<string>([
 export class CreateRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
-  async execute(createDto: CreateRouteDto): Promise<RouteEntity> {
+  async execute(createDto: CreateRouteDto): Promise<RouteRow> {
     // operarioId es opcional: las rutas INSTALACION se crean sin operario
     // y se despachan después desde la bandeja de secretaría (SC-174).
     if (createDto.operarioId !== undefined && createDto.operarioId !== null) {

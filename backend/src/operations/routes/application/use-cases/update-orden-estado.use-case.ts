@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
 import { EstadoOrdenTrabajo } from 'src/shared/enums';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import type { UpdateOrdenEstadoData } from '../../domain/types/orden-trabajo.types';
@@ -15,7 +15,7 @@ export class UpdateOrdenEstadoUseCase {
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
     operarioId: number,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     // Validate estado is valid (defense in depth — DTO @IsEnum should catch first)
     const validEstados = Object.values(EstadoOrdenTrabajo);
     if (!validEstados.includes(data.estado as EstadoOrdenTrabajo)) {

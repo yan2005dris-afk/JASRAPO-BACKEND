@@ -3,7 +3,7 @@ import { ClientRepository } from '../../domain/repositories/client.repository';
 import { UpdateClientDto } from '../../interfaces/dto/update-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import { TerceraEdadService } from '../services/tercera-edad.service';
-import { ClientEntity } from '../../domain/entities/client.entity';
+import type { ClientRow } from '../../infrastructure/repositories/client.include';
 import {
   EntityAlreadyExistsException,
   EntityNotFoundException,
@@ -17,7 +17,7 @@ export class UpdateClientUseCase {
     private readonly terceraEdadService: TerceraEdadService,
   ) {}
 
-  async execute(id: bigint, dto: UpdateClientDto): Promise<ClientEntity> {
+  async execute(id: bigint, dto: UpdateClientDto): Promise<ClientRow> {
     const cliente = await this.clientRepository.findById(id);
 
     if (!cliente) throw new EntityNotFoundException('Cliente', id);

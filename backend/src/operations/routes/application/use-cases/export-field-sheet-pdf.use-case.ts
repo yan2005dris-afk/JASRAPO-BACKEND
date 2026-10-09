@@ -4,6 +4,7 @@ import { RouteRepository } from '../../domain/repositories/route.repository';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { FieldSheetPdfDocumentType } from '../../pdf/field-sheet.pdf-type';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { ReadingForRouteResponseDto } from '../../interfaces/dto/route-response.dto';
 
 @Injectable()
 export class ExportFieldSheetPdfUseCase {
@@ -68,30 +69,31 @@ export class ExportFieldSheetPdfUseCase {
           take: 2000,
         });
 
-      items = readingsResult.data.map((r, idx) => ({
+      const dtos = readingsResult.data.map((r) =>
+        ReadingForRouteResponseDto.fromRow(r),
+      );
+
+      items = dtos.map((dto, idx) => ({
         ordenVisita: idx + 1,
-        guia: r.guia || '—',
-        contrato: r.guia || '—',
-        cliente: r.clienteNombre || 'Sin cliente',
-        direccion: r.direccion || '—',
-        medidor: r.medidorSerie || '—',
-        lecturaAnterior: r.lecturaAnterior != null ? r.lecturaAnterior : '—',
+        guia: dto.guia || '—',
+        contrato: dto.guia || '—',
+        cliente: dto.clienteNombre || 'Sin cliente',
+        direccion: dto.direccion || '—',
+        medidor: dto.medidorSerie || '—',
+        lecturaAnterior:
+          dto.lecturaAnterior != null ? dto.lecturaAnterior : '—',
         tipoActividad: 'LECTURA',
-        estado: r.estadoLectura || 'PENDIENTE',
+        estado: dto.estadoLectura || 'PENDIENTE',
       }));
 
       kpis = {
-        total: readingsResult.data.length,
-        pendientes: readingsResult.data.filter(
-          (r) => r.estadoLectura === 'PENDIENTE',
-        ).length,
-        completadas: readingsResult.data.filter(
-          (r) => r.estadoLectura === 'APROBADA',
-        ).length,
-        conNovedad: readingsResult.data.filter(
-          (r) =>
-            r.estadoLectura === 'CON_NOVEDAD' ||
-            r.estadoLectura === 'RECHAZADA_VERIFICACION',
+        total: dtos.length,
+        pendientes: dtos.filter((d) => d.estadoLectura === 'PENDIENTE').length,
+        completadas: dtos.filter((d) => d.estadoLectura === 'APROBADA').length,
+        conNovedad: dtos.filter(
+          (d) =>
+            d.estadoLectura === 'CON_NOVEDAD' ||
+            d.estadoLectura === 'RECHAZADA_VERIFICACION',
         ).length,
       };
     } else {

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateRouteUseCase } from './update-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import { routeRow } from '../../__test-utils__/route-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -49,7 +49,7 @@ describe('UpdateRouteUseCase', () => {
 
   it('should throw InvalidDomainOperationException when updating to overlapping period', async () => {
     mockRouteRepository.findById.mockResolvedValue(
-      new RouteEntity({
+      routeRow({
         rutaId: 1n,
         nombre: 'Route 1',
         operarioId: 1,
@@ -66,7 +66,7 @@ describe('UpdateRouteUseCase', () => {
       estado: 'ABIERTO',
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
-      new RouteEntity({
+      routeRow({
         rutaId: 2n,
         nombre: 'Route 2',
         operarioId: 2,
@@ -85,7 +85,7 @@ describe('UpdateRouteUseCase', () => {
   });
 
   it('should update periodoId successfully', async () => {
-    const existing = new RouteEntity({
+    const existing = routeRow({
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,
@@ -96,7 +96,7 @@ describe('UpdateRouteUseCase', () => {
       fechaInicio: null,
       fechaFin: null,
     });
-    const updated = new RouteEntity({
+    const updated = routeRow({
       ...existing,
       periodoId: 2,
     });
@@ -119,7 +119,7 @@ describe('UpdateRouteUseCase', () => {
   });
 
   it('should update route successfully with defined fields', async () => {
-    const existing = new RouteEntity({
+    const existing = routeRow({
       rutaId: 1n,
       nombre: 'Old Name',
       operarioId: 1,
@@ -130,7 +130,7 @@ describe('UpdateRouteUseCase', () => {
       fechaInicio: null,
       fechaFin: null,
     });
-    const updated = new RouteEntity({
+    const updated = routeRow({
       ...existing,
       nombre: 'New Name',
       descripcion: 'New Desc',
@@ -148,7 +148,7 @@ describe('UpdateRouteUseCase', () => {
   });
 
   it('should pass correct data when descripcion is set to null vs undefined', async () => {
-    const existing = new RouteEntity({
+    const existing = routeRow({
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,
@@ -174,7 +174,7 @@ describe('UpdateRouteUseCase', () => {
   });
 
   it('should keep COMPLETADA when all readings are approved', async () => {
-    const existing = new RouteEntity({
+    const existing = routeRow({
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,
@@ -206,7 +206,7 @@ describe('UpdateRouteUseCase', () => {
   });
 
   it('should downgrade to PARCIAL when there are unapproved readings', async () => {
-    const existing = new RouteEntity({
+    const existing = routeRow({
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,

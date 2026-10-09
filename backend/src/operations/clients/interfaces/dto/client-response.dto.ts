@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { ClientEntity } from '../../domain/entities/client.entity';
+import type { ClientRow } from '../../infrastructure/repositories/client.include';
 
 export class TipoIdentificacionResponseDto {
   @ApiProperty({ example: 1, description: 'ID del tipo de identificación' })
@@ -108,30 +108,30 @@ export class ClientResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromRow(entity: ClientEntity): ClientResponseDto {
+  static fromRow(row: ClientRow): ClientResponseDto {
     return new ClientResponseDto({
-      clienteId: entity.clienteId,
-      identificacion: entity.identificacion,
-      nombres: entity.nombres,
-      apellidos: entity.apellidos,
-      razonSocial: entity.razonSocial,
-      email: entity.email,
-      telefono: entity.telefono,
-      telefonoSecundario: entity.telefonoSecundario,
-      direccionDomicilio: entity.direccionDomicilio,
-      activo: entity.activo,
-      aplicaDiscapacidad: entity.aplicaDiscapacidad,
-      aplicaTerceraEdad: entity.aplicaTerceraEdad,
-      tipoIdentificacion: entity.tipoIdentificacion
+      clienteId: row.clienteId,
+      identificacion: row.identificacion,
+      nombres: row.nombres,
+      apellidos: row.apellidos,
+      razonSocial: row.razonSocial,
+      email: row.email,
+      telefono: row.telefono,
+      telefonoSecundario: row.telefonoSecundario,
+      direccionDomicilio: row.direccionDomicilio,
+      activo: row.activo,
+      aplicaDiscapacidad: row.aplicaDiscapacidad,
+      aplicaTerceraEdad: row.aplicaTerceraEdad,
+      tipoIdentificacion: row.tipoIdentificacion
         ? {
-            id: entity.tipoIdentificacion.id,
-            codigo: entity.tipoIdentificacion.codigo,
-            descripcion: entity.tipoIdentificacion.descripcion,
+            id: row.tipoIdentificacion.id,
+            codigo: row.tipoIdentificacion.codigo,
+            descripcion: row.tipoIdentificacion.descripcion,
           }
         : null,
-      deletedAt: entity.deletedAt,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      deletedAt: row.deletedAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 }

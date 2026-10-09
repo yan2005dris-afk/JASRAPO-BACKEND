@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeleteRouteUseCase } from './delete-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import { routeRow } from '../../__test-utils__/route-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('DeleteRouteUseCase', () => {
@@ -38,16 +38,16 @@ describe('DeleteRouteUseCase', () => {
   });
 
   it('should soft delete route', async () => {
-    const existing = new RouteEntity({
+    const existing = routeRow({
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,
-      tipoRuta: 'LECTURA',
       comunidadId: 1,
       periodoId: 1,
       estado: 'PENDIENTE',
       fechaInicio: null,
       fechaFin: null,
+      tipoActividad: { codigo: 'LECTURA' },
     });
     mockRouteRepository.findById.mockResolvedValue(existing);
     mockRouteRepository.softDelete.mockResolvedValue(existing);

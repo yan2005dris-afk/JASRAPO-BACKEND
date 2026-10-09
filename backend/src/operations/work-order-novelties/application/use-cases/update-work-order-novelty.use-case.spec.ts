@@ -5,7 +5,7 @@ import { WORK_ORDER_NOVELTY_REPOSITORY } from '../../domain/repositories/work-or
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { FindWorkOrderNoveltyUseCase } from './find-work-order-novelty.use-case';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import { workOrderNoveltyRow } from '../../__test-utils__/work-order-novelty-row.factory';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 
 describe('UpdateWorkOrderNoveltyUseCase', () => {
@@ -38,7 +38,7 @@ describe('UpdateWorkOrderNoveltyUseCase', () => {
 
   it('rejects reassignment of ordenTrabajoId', async () => {
     findUseCaseMock.execute.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         novedadId: 1n,
         ordenTrabajoId: 10n,
         estado: EstadoNovedad.OPEN,
@@ -50,14 +50,14 @@ describe('UpdateWorkOrderNoveltyUseCase', () => {
   });
 
   it('validates state transitions and stamps resolution metadata when RESOLVED', async () => {
-    const existing = new WorkOrderNoveltyEntity({
+    const existing = workOrderNoveltyRow({
       novedadId: 1n,
       ordenTrabajoId: 10n,
       estado: EstadoNovedad.OPEN,
     });
     findUseCaseMock.execute.mockResolvedValue(existing);
     repoMock.update.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         ...existing,
         estado: EstadoNovedad.RESOLVED,
       }),
@@ -79,7 +79,7 @@ describe('UpdateWorkOrderNoveltyUseCase', () => {
     );
 
     findUseCaseMock.execute.mockResolvedValue(
-      new WorkOrderNoveltyEntity({
+      workOrderNoveltyRow({
         novedadId: 1n,
         ordenTrabajoId: 10n,
         estado: EstadoNovedad.RESOLVED,

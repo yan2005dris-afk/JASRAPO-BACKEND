@@ -6,7 +6,6 @@ import {
 } from 'src/shared/domain/exceptions/domain.exception';
 import { PrismaClientRepository } from './prisma-client.repository';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { ClientEntity } from '../../domain/entities/client.entity';
 
 describe('PrismaClientRepository', () => {
   let repository: PrismaClientRepository;
@@ -82,7 +81,7 @@ describe('PrismaClientRepository', () => {
         where: { clienteId: BigInt(1), deletedAt: null },
         include: expect.objectContaining({ tipoIdentificacion: true }),
       });
-      expect(result).toBeInstanceOf(ClientEntity);
+      expect(result).not.toBeNull();
       expect(result!.clienteId).toEqual(BigInt(1));
     });
 
@@ -105,7 +104,7 @@ describe('PrismaClientRepository', () => {
         where: { identificacion: '0926715658' },
         include: expect.objectContaining({ tipoIdentificacion: true }),
       });
-      expect(result).toBeInstanceOf(ClientEntity);
+      expect(result).not.toBeNull();
     });
 
     it('should return null when no client matches', async () => {
@@ -138,7 +137,7 @@ describe('PrismaClientRepository', () => {
           }),
         }),
       );
-      expect(result).toBeInstanceOf(ClientEntity);
+      expect(result).not.toBeNull();
     });
 
     it('should translate Prisma P2002 to EntityAlreadyExistsException', async () => {
@@ -244,7 +243,7 @@ describe('PrismaClientRepository', () => {
         data: { deletedAt: expect.any(Date) },
         include: expect.objectContaining({ tipoIdentificacion: true }),
       });
-      expect(result).toBeInstanceOf(ClientEntity);
+      expect(result).not.toBeNull();
     });
 
     it('should translate Prisma P2025 to EntityNotFoundException', async () => {
@@ -335,7 +334,7 @@ describe('PrismaClientRepository', () => {
           }),
         }),
       );
-      expect(result).toBeInstanceOf(ClientEntity);
+      expect(result).not.toBeNull();
     });
 
     it('should reactivate a soft-deleted principal and refresh its data', async () => {
@@ -363,7 +362,7 @@ describe('PrismaClientRepository', () => {
         include: expect.objectContaining({ tipoIdentificacion: true }),
       });
       expect(mockTx.clientes.updateMany).not.toHaveBeenCalled();
-      expect(result).toBeInstanceOf(ClientEntity);
+      expect(result).not.toBeNull();
     });
 
     it('should soft-delete extra CONSUMIDOR_FINAL records when duplicates exist', async () => {

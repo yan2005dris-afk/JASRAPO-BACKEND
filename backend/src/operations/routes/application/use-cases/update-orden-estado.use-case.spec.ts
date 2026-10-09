@@ -2,7 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateOrdenEstadoUseCase } from './update-orden-estado.use-case';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
+import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UpdateOrdenEstadoUseCase', () => {
@@ -13,13 +14,11 @@ describe('UpdateOrdenEstadoUseCase', () => {
     verifyOperatorWorkOrderOwnership: jest.fn(),
   };
 
-  const sampleOrden = new OrdenTrabajoEntity({
+  const sampleOrden: OrdenTrabajoRow = ordenTrabajoRow({
     ordenTrabajoId: 1n,
     rutaId: 10n,
     contratoId: 100n,
     medidorId: 200n,
-    tipoActividad: 'INSTALACION',
-    estado: 'PENDIENTE',
     ordenVisita: 1,
     resultadoObservacion: null,
     evidenciaFotoUrl: null,
@@ -52,10 +51,10 @@ describe('UpdateOrdenEstadoUseCase', () => {
   it.each(['PENDIENTE', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA', 'FALLIDA'])(
     'should accept valid estado %s, verify ownership, and delegate to repository',
     async (estado) => {
-      const updated = new OrdenTrabajoEntity({
+      const updated: OrdenTrabajoRow = {
         ...sampleOrden,
-        estado,
-      });
+        estado: { ...sampleOrden.estado, codigo: estado, nombre: estado },
+      };
       mockOrdenTrabajoRepository.updateEstado.mockResolvedValue(updated);
 
       const result = await useCase.execute(
@@ -74,7 +73,7 @@ describe('UpdateOrdenEstadoUseCase', () => {
         estado,
         resultadoObservacion: 'ok',
       });
-      expect(result.estado).toBe(estado);
+      expect(result.estado.codigo).toBe(estado);
     },
   );
 

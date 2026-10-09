@@ -12,13 +12,12 @@ import {
   TipoActividadCodes,
 } from 'src/shared/enums';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoMapper } from '../mappers/orden-trabajo.mapper';
+import { ordenTrabajoInclude, type OrdenTrabajoRow } from './route.include';
 import {
   paginate,
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import type { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
 import type {
   OrdenTrabajoFilters,
   OrdenTrabajoKpis,
@@ -31,38 +30,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-
-interface OrdenTrabajoPrismaResult {
-  ordenTrabajoId: bigint;
-  rutaId: bigint;
-  contratoId: bigint;
-  medidorId: bigint | null;
-  estado: string;
-  ordenVisita: number;
-  resultadoObservacion: string | null;
-  evidenciaFotoUrl: string | null;
-  completadoEn: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-  lecturaId: bigint | null;
-  ruta: { tipoActividad: { codigo: string } };
-
-  contrato: {
-    numeroGuia: string;
-    direccionSuministro: string;
-    cliente: {
-      nombres: string;
-      apellidos: string;
-    } | null;
-  } | null;
-  medidor: {
-    serie: string;
-  } | null;
-  lectura: {
-    lecturaId: bigint;
-  } | null;
-}
 
 @Injectable()
 export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
@@ -138,24 +105,21 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   async findById(
     ordenTrabajoId: bigint,
     includeDeleted: boolean = false,
-  ): Promise<OrdenTrabajoEntity | null> {
-    const raw = await this.prisma.ordenesTrabajo.findFirst({
-      include: {
-        ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-      },
+  ): Promise<OrdenTrabajoRow | null> {
+    return this.prisma.ordenesTrabajo.findFirst({
+      include: ordenTrabajoInclude,
       where: {
         ordenTrabajoId,
         ...(includeDeleted ? {} : { deletedAt: null }),
       },
     });
-    return raw ? OrdenTrabajoMapper.toEntity(raw) : null;
   }
 
   async findByRutaId(
     rutaId: bigint,
     filters: OrdenTrabajoFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<OrdenTrabajoEntity, OrdenTrabajoKpis>> {
+  ): Promise<PaginatedResult<OrdenTrabajoRow, OrdenTrabajoKpis>> {
     const where: Prisma.OrdenesTrabajoWhereInput = {
       rutaId,
       deletedAt: null,
@@ -165,35 +129,11 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     };
 
     const [result, estadoGroups] = await Promise.all([
-      paginate<OrdenTrabajoPrismaResult>(
+      paginate<OrdenTrabajoRow>(
         this.prisma.ordenesTrabajo,
         {
           where,
-          include: {
-            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-            contrato: {
-              select: {
-                numeroGuia: true,
-                direccionSuministro: true,
-                cliente: {
-                  select: {
-                    nombres: true,
-                    apellidos: true,
-                  },
-                },
-              },
-            },
-            medidor: {
-              select: {
-                serie: true,
-              },
-            },
-            lectura: {
-              select: {
-                lecturaId: true,
-              },
-            },
-          },
+          include: ordenTrabajoInclude,
           orderBy: { ordenVisita: 'asc' },
         },
         pagination,
@@ -209,35 +149,8 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       estadoGroups.map((g) => [g.estado, g._count._all]),
     );
 
-    const data = result.data.map((raw) =>
-      OrdenTrabajoMapper.toEntity({
-        ordenTrabajoId: raw.ordenTrabajoId,
-        rutaId: raw.rutaId,
-        contratoId: raw.contratoId,
-        medidorId: raw.medidorId,
-        ruta: raw.ruta,
-        estado: raw.estado,
-        ordenVisita: raw.ordenVisita,
-        resultadoObservacion: raw.resultadoObservacion,
-        evidenciaFotoUrl: raw.evidenciaFotoUrl,
-        completadoEn: raw.completadoEn,
-        createdAt: raw.createdAt,
-        updatedAt: raw.updatedAt,
-        deletedAt: raw.deletedAt,
-        lecturaId: raw.lecturaId,
-
-        contratoNumeroContrato: raw.contrato?.numeroGuia ?? null,
-        contratoClienteNombre: raw.contrato?.cliente
-          ? `${raw.contrato.cliente.nombres} ${raw.contrato.cliente.apellidos}`.trim()
-          : null,
-        contratoDireccion: raw.contrato?.direccionSuministro ?? null,
-        medidorNumeroSerie: raw.medidor?.serie ?? null,
-        lecturaLecturaId: raw.lectura?.lecturaId ?? null,
-      }),
-    );
-
     return {
-      data,
+      data: result.data,
       meta: result.meta,
       kpis: {
         total: result.meta.total,
@@ -284,9 +197,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   async updateEstado(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     try {
-      const raw = await this.prisma.$transaction(async (tx) => {
+      return await this.prisma.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT c.contrato_id FROM contratos c JOIN ordenes_trabajo ot ON ot.contrato_id = c.contrato_id WHERE ot.orden_trabajo_id = ${ordenTrabajoId} FOR UPDATE OF c`;
         await tx.$queryRaw`SELECT orden_trabajo_id FROM ordenes_trabajo WHERE orden_trabajo_id = ${ordenTrabajoId} FOR UPDATE`;
         const current = await tx.ordenesTrabajo.findUnique({
@@ -315,9 +228,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
           data.estado === EstadoOrdenTrabajo.EN_PROGRESO;
 
         return tx.ordenesTrabajo.update({
-          include: {
-            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-          },
+          include: ordenTrabajoInclude,
           where: { ordenTrabajoId },
           data: {
             estado: data.estado as EstadoOrdenTrabajo,
@@ -331,8 +242,6 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
           },
         });
       });
-
-      return OrdenTrabajoMapper.toEntity(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -350,7 +259,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   async updateOperatorWorkOrder(
     ordenTrabajoId: bigint,
     data: UpdateOperatorWorkOrderData,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     try {
       return await this.prisma.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT c.contrato_id FROM contratos c JOIN ordenes_trabajo ot ON ot.contrato_id = c.contrato_id WHERE ot.orden_trabajo_id = ${ordenTrabajoId} FOR UPDATE OF c`;
@@ -387,10 +296,8 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
                 ? { completadoEn: null }
                 : {};
 
-        const raw = await tx.ordenesTrabajo.update({
-          include: {
-            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-          },
+        return await tx.ordenesTrabajo.update({
+          include: ordenTrabajoInclude,
           where: { ordenTrabajoId },
           data: {
             ...(data.estado !== undefined
@@ -407,8 +314,6 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
             ...completionUpdate,
           },
         });
-
-        return OrdenTrabajoMapper.toEntity(raw);
       });
     } catch (error) {
       if (
@@ -603,7 +508,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   async linkLectura(
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const orden = await tx.ordenesTrabajo.findUnique({
@@ -642,17 +547,13 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
 
         // Operación PURA: solo escribe `lecturaId`. Si el caller quiere
         // marcar la orden como completada, debe invocar `updateEstado`.
-        const raw = await tx.ordenesTrabajo.update({
-          include: {
-            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-          },
+        return await tx.ordenesTrabajo.update({
+          include: ordenTrabajoInclude,
           where: { ordenTrabajoId },
           data: {
             lecturaId: data.lecturaId,
           },
         });
-
-        return OrdenTrabajoMapper.toEntity(raw);
       });
     } catch (error) {
       if (
@@ -668,11 +569,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     }
   }
 
-  async create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity> {
-    const raw = await this.prisma.ordenesTrabajo.create({
-      include: {
-        ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-      },
+  async create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoRow> {
+    return await this.prisma.ordenesTrabajo.create({
+      include: ordenTrabajoInclude,
       data: {
         rutaId: data.rutaId,
         contratoId: data.contratoId,
@@ -682,6 +581,5 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         ordenVisita: data.ordenVisita ?? 0,
       },
     });
-    return OrdenTrabajoMapper.toEntity(raw);
   }
 }

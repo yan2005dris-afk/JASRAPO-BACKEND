@@ -3,7 +3,7 @@ import {
   WORK_ORDER_NOVELTY_REPOSITORY,
   type WorkOrderNoveltyRepository,
 } from '../../domain/repositories/work-order-novelty.repository';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { NoveltyEvidenceQueueService } from '../../infrastructure/novelty-evidence-queue.service';
 import { FindWorkOrderNoveltyUseCase } from './find-work-order-novelty.use-case';
@@ -29,7 +29,7 @@ export class SoftDeleteWorkOrderNoveltyUseCase {
   async execute(
     id: bigint,
     actorUserId?: number,
-  ): Promise<WorkOrderNoveltyEntity> {
+  ): Promise<WorkOrderNoveltyRow> {
     const existing = await this.findUseCase.execute(id);
     if (existing.deletedAt) {
       throw new NotFoundException(`Novedad con ID ${id} no encontrada`);

@@ -8,7 +8,7 @@ import {
   WORK_ORDER_NOVELTY_REPOSITORY,
   type WorkOrderNoveltyRepository,
 } from '../../domain/repositories/work-order-novelty.repository';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import {
   StorageService,
@@ -42,7 +42,7 @@ export class CreateWorkOrderNoveltyUseCase {
   async execute(
     dto: CreateWorkOrderNoveltyInput,
     file?: Express.Multer.File,
-  ): Promise<WorkOrderNoveltyEntity> {
+  ): Promise<WorkOrderNoveltyRow> {
     const ordenTrabajoId = BigInt(dto.ordenTrabajoId);
     const order = await this.prisma.ordenesTrabajo.findUnique({
       where: { ordenTrabajoId },

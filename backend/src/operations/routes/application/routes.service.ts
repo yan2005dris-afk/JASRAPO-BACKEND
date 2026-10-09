@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { CreateRouteDto } from '../interfaces/dto/create-route.dto';
 import { UpdateRouteDto } from '../interfaces/dto/update-route.dto';
 import { FilterReadingsDto } from '../interfaces/dto/filter-readings.dto';
-import { RouteEntity } from '../domain/entities/route.entity';
-import { ReadingForRouteEntity } from '../domain/entities/reading-for-route.entity';
+import type {
+  RouteRow,
+  ReadingForRouteRow,
+} from '../infrastructure/repositories/route.include';
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
 import { GetReadingsByRutaUseCase } from './use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
@@ -39,7 +41,7 @@ export class RoutesService {
 
   async getEligibleReadings(
     filterDto: FilterReadingsDto,
-  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
+  ): Promise<PaginatedResult<ReadingForRouteRow>> {
     return this.getEligibleReadingsUseCase.execute({
       tipoRuta: filterDto.tipoRuta,
       comunidadId: filterDto.comunidadId,
@@ -56,36 +58,34 @@ export class RoutesService {
   async getReadingsByRuta(
     rutaId: bigint,
     pagination: { page?: number; limit?: number },
-  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
+  ): Promise<PaginatedResult<ReadingForRouteRow>> {
     return this.getReadingsByRutaUseCase.execute({ rutaId, pagination });
   }
 
-  async create(createDto: CreateRouteDto): Promise<RouteEntity> {
+  async create(createDto: CreateRouteDto): Promise<RouteRow> {
     return this.createRouteUseCase.execute(createDto);
   }
 
-  async createAssignments(
-    dto: CreateRouteAssignmentsDto,
-  ): Promise<RouteEntity[]> {
+  async createAssignments(dto: CreateRouteAssignmentsDto): Promise<RouteRow[]> {
     return this.createRouteAssignmentsUseCase.execute(dto);
   }
 
   async findAll(params: {
     pagination: { page?: number; limit?: number };
     where?: RouteFilters;
-  }): Promise<PaginatedResult<RouteEntity>> {
+  }): Promise<PaginatedResult<RouteRow>> {
     return this.findAllRoutesUseCase.execute(params);
   }
 
-  async findOne(id: bigint): Promise<RouteEntity> {
+  async findOne(id: bigint): Promise<RouteRow> {
     return this.findOneRouteUseCase.execute(id);
   }
 
-  async update(id: bigint, updateDto: UpdateRouteDto): Promise<RouteEntity> {
+  async update(id: bigint, updateDto: UpdateRouteDto): Promise<RouteRow> {
     return this.updateRouteUseCase.execute(id, updateDto);
   }
 
-  async delete(id: bigint): Promise<RouteEntity> {
+  async delete(id: bigint): Promise<RouteRow> {
     return this.deleteRouteUseCase.execute(id);
   }
 
