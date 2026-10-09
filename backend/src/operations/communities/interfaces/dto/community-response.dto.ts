@@ -69,7 +69,7 @@ export class CommunityResponseDto {
       row.porcentajeTasaSeguridad != null
         ? Number(row.porcentajeTasaSeguridad)
         : null;
-    dto.sectores = (row.sector ?? []) as SectorItemDto[];
+    dto.sectores = row.sector ?? [];
     dto.deletedAt = row.deletedAt;
     dto.createdAt = row.createdAt;
     dto.updatedAt = row.updatedAt;
