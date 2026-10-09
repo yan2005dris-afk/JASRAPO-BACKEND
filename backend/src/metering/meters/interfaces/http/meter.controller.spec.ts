@@ -9,7 +9,7 @@ describe('MeterController', () => {
   let controller: MeterController;
   let service: MeterService;
 
-  const mockMeterEntity = {
+  const mockMeterRow = {
     medidorId: BigInt(1),
     codigo: 'MED-000001',
     serie: 'MED-001',
@@ -19,9 +19,7 @@ describe('MeterController', () => {
     fechaInstalacion: null,
     fechaBaja: null,
     motivo: null,
-    contratoId: null,
-    clienteNombre: null,
-    direccionSuministro: null,
+    historial: [],
   };
 
   const expectedDto = {
@@ -40,7 +38,7 @@ describe('MeterController', () => {
   };
 
   const mockPaginatedResponse = {
-    data: [mockMeterEntity],
+    data: [mockMeterRow],
     meta: {
       total: 1,
       page: 1,
@@ -58,10 +56,10 @@ describe('MeterController', () => {
 
   beforeEach(async () => {
     mockMeterService = {
-      create: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      create: jest.fn(() => Promise.resolve(mockMeterRow)),
       findAll: jest.fn(() => Promise.resolve(mockPaginatedResponse)),
-      findOne: jest.fn(() => Promise.resolve(mockMeterEntity)),
-      update: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      findOne: jest.fn(() => Promise.resolve(mockMeterRow)),
+      update: jest.fn(() => Promise.resolve(mockMeterRow)),
       remove: jest.fn(() => Promise.resolve(undefined)),
       exportCsv: jest.fn(() => Promise.resolve(Readable.from(['csv']))),
       exportPdf: jest.fn(() => Promise.resolve(Buffer.from('%PDF-1.4'))),
@@ -96,7 +94,7 @@ describe('MeterController', () => {
       const result = await controller.findAll(filterDto);
 
       expect(service.findAll).toHaveBeenCalledWith(filterDto);
-      expect(result.data).toEqual([mockMeterEntity]);
+      expect(result.data).toEqual([mockMeterRow]);
       expect(result.meta).toEqual(mockPaginatedResponse.meta);
     });
 
@@ -105,7 +103,7 @@ describe('MeterController', () => {
       const result = await controller.findAll(filterDto);
 
       expect(service.findAll).toHaveBeenCalledWith(filterDto);
-      expect(result.data).toEqual([mockMeterEntity]);
+      expect(result.data).toEqual([mockMeterRow]);
     });
   });
 

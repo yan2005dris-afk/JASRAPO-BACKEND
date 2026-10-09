@@ -10,6 +10,17 @@ interface MeterInventoryRow {
   estado?: string | null;
   contratoId?: bigint | number | null;
   clienteNombre?: string | null;
+  historial?: Array<{
+    contratoId?: bigint | number | null;
+    contrato?: {
+      contratoId?: bigint | number | null;
+      cliente?: {
+        nombres?: string | null;
+        apellidos?: string | null;
+        razonSocial?: string | null;
+      } | null;
+    } | null;
+  }>;
 }
 
 interface MeterInventoryFilters {
@@ -46,15 +57,31 @@ export const MetersInventoryPdfDocumentType: PdfDocumentType = {
     const source = (raw['medidores'] as MeterInventoryRow[]) ?? [];
     const filtros = (raw['filtros'] as MeterInventoryFilters) ?? {};
 
-    const medidores = source.map((m) => ({
-      serie: m.serie ?? '—',
-      marca: m.marca ?? '—',
-      modelo: m.modelo ?? '—',
-      estado: m.estado ?? '',
-      estadoLabel: statusLabel(m.estado),
-      contrato: m.contratoId == null ? '—' : m.contratoId.toString(),
-      cliente: m.clienteNombre ?? 'Sin asignar',
-    }));
+    const medidores = source.map((m) => {
+      const activeLink = m.historial?.[0];
+      const cliente = activeLink?.contrato?.cliente;
+      const clienteNombre =
+        m.clienteNombre ??
+        (cliente
+          ? cliente.razonSocial?.trim() ||
+            [cliente.nombres, cliente.apellidos]
+              .map((part) => part?.trim())
+              .filter(Boolean)
+              .join(' ') ||
+            null
+          : null);
+      const contratoId = activeLink?.contratoId ?? m.contratoId;
+
+      return {
+        serie: m.serie ?? '—',
+        marca: m.marca ?? '—',
+        modelo: m.modelo ?? '—',
+        estado: m.estado ?? '',
+        estadoLabel: statusLabel(m.estado),
+        contrato: contratoId == null ? '—' : contratoId.toString(),
+        cliente: clienteNombre ?? 'Sin asignar',
+      };
+    });
 
     const totalPorEstado = medidores.reduce<Record<string, number>>(
       (totals, medidor) => {

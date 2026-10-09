@@ -1,15 +1,21 @@
-import type { MeterEntity } from '../entities/meter.entity';
-import type { ReemplazoMedidorEntity } from '../entities/reemplazo-medidor.entity';
+import type {
+  MeterRow,
+  MeterHistoryRow,
+  ReemplazoMedidorRow,
+} from '../../infrastructure/repositories/meter.include';
 import type { Decimal } from 'decimal.js';
 import type {
+  EstadoMedidor,
   MotivoReemplazoMedidor,
   ResponsabilidadDano,
   TratamientoSaliente,
   TratamientoEntrante,
 } from 'src/shared/enums';
 
+export type { MeterRow, MeterHistoryRow, ReemplazoMedidorRow };
+
 export interface MeterFilters {
-  estado?: MeterEntity['estado'];
+  estado?: EstadoMedidor;
   marca?: string;
   modelo?: string;
   serie?: string;
@@ -20,14 +26,14 @@ export interface CreateMeterRepositoryData {
   marca: string;
   modelo: string;
   serie: string;
-  estado: MeterEntity['estado'];
+  estado: EstadoMedidor;
 }
 
 export interface UpdateMeterRepositoryData {
   marca?: string;
   modelo?: string;
   serie?: string;
-  estado?: MeterEntity['estado'];
+  estado?: EstadoMedidor;
   fechaInstalacion?: Date | null;
   fechaBaja?: Date | null;
   motivo?: string | null;
@@ -69,7 +75,7 @@ export interface ReplaceMeterRepositoryData {
 }
 
 export interface ReplaceMeterResult {
-  reemplazo: ReemplazoMedidorEntity;
+  reemplazo: ReemplazoMedidorRow;
   historialSalienteId: bigint;
   historialEntranteId: bigint;
   consumoMedidoSaliente: Decimal;

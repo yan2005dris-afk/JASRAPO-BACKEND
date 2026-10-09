@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DateUtil } from 'src/shared/utils/date.util';
-import type { MeterHistoryEntity } from '../../domain/entities/meter-history.entity';
+import type { MeterHistoryRow } from '../../infrastructure/repositories/meter.include';
 
 export class MeterHistoryResponseDto {
   @ApiProperty({ example: '10' })
@@ -58,15 +58,30 @@ export class MeterHistoryResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromRow(e: MeterHistoryEntity): MeterHistoryResponseDto {
+  static fromRow(e: MeterHistoryRow): MeterHistoryResponseDto {
+    const cliente = e.contrato?.cliente;
+    const clienteNombre = cliente
+      ? cliente.razonSocial?.trim() ||
+        [cliente.nombres, cliente.apellidos]
+          .map((part) => part?.trim())
+          .filter(Boolean)
+          .join(' ') ||
+        null
+      : null;
+
+    const reemplazoSalienteId =
+      e.reemplazosSaliente?.reemplazoId?.toString() ?? null;
+    const reemplazoEntranteId =
+      e.reemplazosEntrante?.reemplazoId?.toString() ?? null;
+
     return new MeterHistoryResponseDto({
       historialId: e.historialId.toString(),
       medidorId: e.medidorId.toString(),
-      serie: e.serie,
-      marca: e.marca,
-      modelo: e.modelo,
+      serie: e.medidor?.serie ?? '',
+      marca: e.medidor?.marca ?? '',
+      modelo: e.medidor?.modelo ?? '',
       contratoId: e.contratoId.toString(),
-      clienteNombre: e.clienteNombre ?? null,
+      clienteNombre,
       fechaDesde: DateUtil.formatForFrontend(e.fechaDesde) ?? '',
       fechaHasta: DateUtil.formatForFrontend(e.fechaHasta),
       lecturaInicial: Number(e.lecturaInicial),
@@ -75,14 +90,9 @@ export class MeterHistoryResponseDto {
       observacion: e.observacion ?? null,
       saldoPendienteCambio:
         e.saldoPendienteCambio != null ? Number(e.saldoPendienteCambio) : null,
-      reemplazoSalienteId: e.reemplazoSalienteId
-        ? e.reemplazoSalienteId.toString()
-        : null,
-      reemplazoEntranteId: e.reemplazoEntranteId
-        ? e.reemplazoEntranteId.toString()
-        : null,
-      esReemplazo:
-        e.reemplazoSalienteId != null || e.reemplazoEntranteId != null,
+      reemplazoSalienteId,
+      reemplazoEntranteId,
+      esReemplazo: reemplazoSalienteId != null || reemplazoEntranteId != null,
     });
   }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { MeterEntity } from '../../domain/entities/meter.entity';
+import type { MeterRow } from '../../infrastructure/repositories/meter.include';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 export class MeterResponseDto {
@@ -80,7 +80,18 @@ export class MeterResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromRow(meter: MeterEntity): MeterResponseDto {
+  static fromRow(meter: MeterRow): MeterResponseDto {
+    const activeLink = meter.historial?.[0];
+    const cliente = activeLink?.contrato?.cliente;
+    const clienteNombre = cliente
+      ? cliente.razonSocial?.trim() ||
+        [cliente.nombres, cliente.apellidos]
+          .map((part) => part?.trim())
+          .filter(Boolean)
+          .join(' ') ||
+        null
+      : null;
+
     return new MeterResponseDto({
       medidorId: String(meter.medidorId),
       codigo: meter.codigo ?? null,
@@ -91,9 +102,9 @@ export class MeterResponseDto {
       fechaInstalacion: DateUtil.formatForFrontend(meter.fechaInstalacion),
       fechaBaja: DateUtil.formatForFrontend(meter.fechaBaja),
       motivo: meter.motivo,
-      contratoId: meter.contratoId?.toString() ?? null,
-      clienteNombre: meter.clienteNombre ?? null,
-      direccionSuministro: meter.direccionSuministro ?? null,
+      contratoId: activeLink?.contratoId?.toString() ?? null,
+      clienteNombre,
+      direccionSuministro: activeLink?.contrato?.direccionSuministro ?? null,
     });
   }
 }
