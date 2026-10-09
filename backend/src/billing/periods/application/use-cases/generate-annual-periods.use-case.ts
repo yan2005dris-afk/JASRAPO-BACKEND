@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import type { PeriodEntity } from '../../domain/entities/period.entity';
+import type {
+  PeriodRow,
+  CreatePeriodData,
+} from '../../domain/types/period.types';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import { GenerateAnnualPeriodsDto } from '../../interfaces/dto/generate-annual-periods.dto';
-import type { CreatePeriodData } from '../../domain/types/period.types';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { DateUtil } from 'src/shared/utils/date.util';
 
@@ -26,7 +28,7 @@ const MONTH_NAMES = [
 export class GenerateAnnualPeriodsUseCase {
   constructor(private readonly periodRepository: PeriodRepository) {}
 
-  async execute(dto: GenerateAnnualPeriodsDto): Promise<PeriodEntity[]> {
+  async execute(dto: GenerateAnnualPeriodsDto): Promise<PeriodRow[]> {
     const year = dto.year;
     const diaVencimiento = dto.diaVencimiento ?? 15;
     const estado = dto.estadoInicial ?? EstadoPeriodo.CERRADO;
@@ -95,7 +97,7 @@ export class GenerateAnnualPeriodsUseCase {
     }
 
     // 5. Create missing periods in batch
-    const newlyCreatedPeriods =
+    const newlyCreatedPeriods: PeriodRow[] =
       await this.periodRepository.createBatch(toCreate);
 
     // 6. Return newly created periods ordered chronologically

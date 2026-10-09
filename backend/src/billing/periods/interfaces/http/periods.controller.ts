@@ -59,7 +59,7 @@ export class PeriodsController {
     @Body() createPeriodDto: CreatePeriodDto,
   ): Promise<PeriodResponseDto> {
     const result = await this.periodsService.create(createPeriodDto);
-    return PeriodResponseDto.fromEntity(result);
+    return PeriodResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -84,7 +84,7 @@ export class PeriodsController {
     @Body() dto: GenerateAnnualPeriodsDto,
   ): Promise<PeriodResponseDto[]> {
     const results = await this.periodsService.generateAnnualPeriods(dto);
-    return PeriodResponseDto.fromEntityList(results);
+    return PeriodResponseDto.fromRowList(results);
   }
 
   @ApiOperation({
@@ -104,7 +104,7 @@ export class PeriodsController {
       limit: filters.limit,
     });
     return {
-      data: PeriodResponseDto.fromEntityList(result.data),
+      data: PeriodResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -133,7 +133,7 @@ export class PeriodsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<PeriodResponseDto> {
     const result = await this.periodsService.findOne(id);
-    return PeriodResponseDto.fromEntity(result);
+    return PeriodResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -167,7 +167,7 @@ export class PeriodsController {
     @Body() updatePeriodDto: UpdatePeriodDto,
   ): Promise<PeriodResponseDto> {
     const result = await this.periodsService.update(id, updatePeriodDto);
-    return PeriodResponseDto.fromEntity(result);
+    return PeriodResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -199,6 +199,6 @@ export class PeriodsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<PeriodResponseDto> {
     const result = await this.periodsService.delete(id);
-    return PeriodResponseDto.fromEntity(result);
+    return PeriodResponseDto.fromRow(result);
   }
 }

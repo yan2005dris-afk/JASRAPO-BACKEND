@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import type { UpdatePeriodData } from '../../domain/types/period.types';
-import type { PeriodEntity } from '../../domain/entities/period.entity';
+import type {
+  UpdatePeriodData,
+  PeriodRow,
+} from '../../domain/types/period.types';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -13,7 +15,7 @@ import { DateUtil } from 'src/shared/utils/date.util';
 export class UpdatePeriodUseCase {
   constructor(private readonly periodRepository: PeriodRepository) {}
 
-  async execute(id: number, data: UpdatePeriodData): Promise<PeriodEntity> {
+  async execute(id: number, data: UpdatePeriodData): Promise<PeriodRow> {
     const existing = await this.periodRepository.findById(id);
     if (!existing) {
       throw new EntityNotFoundException('Periodo', id);

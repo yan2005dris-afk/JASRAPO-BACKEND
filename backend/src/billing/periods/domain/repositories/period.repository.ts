@@ -1,4 +1,4 @@
-import type { PeriodEntity } from '../entities/period.entity';
+import type { PeriodRow } from '../types/period.types';
 import type {
   CreatePeriodData,
   UpdatePeriodData,
@@ -9,30 +9,30 @@ import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 export abstract class PeriodRepository {
-  abstract create(data: CreatePeriodData): Promise<PeriodEntity>;
+  abstract create(data: CreatePeriodData): Promise<PeriodRow>;
 
   abstract findAll(
     filters?: PeriodFilters,
     pagination?: PaginateOptions,
-  ): Promise<PaginatedResult<PeriodEntity>>;
+  ): Promise<PaginatedResult<PeriodRow>>;
 
-  abstract findById(id: number): Promise<PeriodEntity | null>;
+  abstract findById(id: number): Promise<PeriodRow | null>;
 
-  abstract findByName(nombre: string): Promise<PeriodEntity | null>;
+  abstract findByName(nombre: string): Promise<PeriodRow | null>;
 
-  abstract findByNames(nombres: string[]): Promise<PeriodEntity[]>;
+  abstract findByNames(nombres: string[]): Promise<PeriodRow[]>;
 
   abstract findOverlapping(
     fechaInicio: Date,
     fechaFin: Date,
     excludeId?: number,
-  ): Promise<PeriodEntity | null>;
+  ): Promise<PeriodRow | null>;
 
-  abstract createBatch(data: CreatePeriodData[]): Promise<PeriodEntity[]>;
+  abstract createBatch(data: CreatePeriodData[]): Promise<PeriodRow[]>;
 
-  abstract update(id: number, data: UpdatePeriodData): Promise<PeriodEntity>;
+  abstract update(id: number, data: UpdatePeriodData): Promise<PeriodRow>;
 
-  abstract delete(id: number): Promise<PeriodEntity>;
+  abstract delete(id: number): Promise<PeriodRow>;
 
   abstract countRelations(id: number): Promise<PeriodRelationCounts>;
 }
