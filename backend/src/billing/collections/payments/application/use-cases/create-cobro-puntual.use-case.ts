@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Decimal } from 'decimal.js';
-import { EstadoPago, TipoDetallePago } from 'src/generated/prisma/enums';
+import { EstadoPago, TipoDetallePago } from 'src/shared/enums';
 import { CreateCobroPuntualDto } from '../../interfaces/dto/create-cobro-puntual.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';

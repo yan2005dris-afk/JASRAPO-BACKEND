@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EstadoPago, Banco, TarjetaCredito } from 'src/generated/prisma/enums';
+import { EstadoPago, Banco, TarjetaCredito } from 'src/shared/enums';
 import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
 import { CreateCobroPuntualUseCase } from './use-cases/create-cobro-puntual.use-case';
 import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';

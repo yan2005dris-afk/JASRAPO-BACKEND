@@ -1,4 +1,4 @@
-import type { EstadoPeriodo } from 'src/generated/prisma/enums';
+import type { EstadoPeriodo } from 'src/shared/enums';
 
 /**
  * Re-export canonico de `PeriodRow` para los consumidores de dominio.

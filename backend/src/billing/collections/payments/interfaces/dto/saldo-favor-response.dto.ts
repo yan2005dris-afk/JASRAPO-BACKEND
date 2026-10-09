@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TipoOrigenAbono } from 'src/generated/prisma/enums';
+import { TipoOrigenAbono } from 'src/shared/enums';
 import type { SaldoFavorRow } from '../../domain/types/payment.types';
 import { DateUtil } from 'src/shared/utils/date.util';
 

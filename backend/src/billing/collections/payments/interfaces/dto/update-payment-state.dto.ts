@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
-import { EstadoPago } from 'src/generated/prisma/enums';
+import { EstadoPago } from 'src/shared/enums';
 
 export class UpdatePaymentStateDto {
   @ApiProperty({ enum: EstadoPago, example: 'REGISTRADO' })

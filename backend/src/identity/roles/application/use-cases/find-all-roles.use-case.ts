@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RoleRepository } from '../../domain/repositories/role.repository';
 import type { RoleRow } from '../../domain/types/role.types';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 
 @Injectable()

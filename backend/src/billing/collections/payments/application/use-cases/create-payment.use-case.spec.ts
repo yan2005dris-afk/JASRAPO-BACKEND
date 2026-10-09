@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { TipoDetallePago } from 'src/generated/prisma/enums';
+import { TipoDetallePago } from 'src/shared/enums';
 import { CreatePaymentUseCase } from './create-payment.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 import type { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';

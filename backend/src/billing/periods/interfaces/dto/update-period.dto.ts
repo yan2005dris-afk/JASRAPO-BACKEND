@@ -1,7 +1,7 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { CreatePeriodDto } from './create-period.dto';
 import { IsEnum, IsOptional, IsString, Matches } from 'class-validator';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 
 export class UpdatePeriodDto extends PartialType(CreatePeriodDto) {
   @ApiPropertyOptional({

@@ -1,4 +1,4 @@
-import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { PdfService } from '../infrastructure/pdf/pdf.service';
 import { ClientModule } from '../operations/clients/client.module';
 import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
@@ -46,7 +46,7 @@ import { ExportModule } from '../infrastructure/export/export.module';
 @Module({
   imports: [
     ClientModule,
-    forwardRef(() => AgreementsModule),
+    AgreementsModule,
     InstitutionalProfileModule,
     ExportModule,
   ],

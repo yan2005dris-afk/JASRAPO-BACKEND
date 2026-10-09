@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ReportsModule } from 'src/reports/reports.module';
 import { AgreementsController } from './interfaces/http/agreements.controller';
 import { AgreementsService } from './application/agreements.service';
@@ -12,7 +12,7 @@ import { PrismaAgreementRepository } from './infrastructure/repositories/prisma-
 import { InstitutionalProfileModule } from 'src/institutional-profile/institutional-profile.module';
 
 @Module({
-  imports: [forwardRef(() => ReportsModule), InstitutionalProfileModule],
+  imports: [ReportsModule, InstitutionalProfileModule],
   controllers: [AgreementsController],
   providers: [
     { provide: AgreementRepository, useClass: PrismaAgreementRepository },

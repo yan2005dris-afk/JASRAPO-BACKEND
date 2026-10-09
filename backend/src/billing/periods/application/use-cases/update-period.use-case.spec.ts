@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { UpdatePeriodUseCase } from './update-period.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
 import { periodRow } from '../../__test-utils__/period-row.factory';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import {
   EntityAlreadyExistsException,
   EntityNotFoundException,

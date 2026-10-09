@@ -1,4 +1,4 @@
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import type { PeriodRow } from '../infrastructure/repositories/period.include';
 
 /**

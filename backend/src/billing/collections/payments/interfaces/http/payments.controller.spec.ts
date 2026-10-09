@@ -2,7 +2,7 @@ import { RequestMethod } from '@nestjs/common';
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { EstadoPago } from 'src/generated/prisma/enums';
+import { EstadoPago } from 'src/shared/enums';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from '../../application/payments.service';
 import { PaymentRow } from '../../domain/types/payment.types';

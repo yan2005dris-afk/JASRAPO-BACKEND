@@ -35,7 +35,7 @@ import {
   ReadingForRouteResponseDto,
 } from '../dto/route-response.dto';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';

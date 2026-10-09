@@ -29,7 +29,7 @@ import {
 } from '../dto/client-response.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @ApiTags('clients')
 @ApiBearerAuth()

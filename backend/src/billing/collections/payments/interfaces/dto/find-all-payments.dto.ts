@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsOptional, Matches } from 'class-validator';
-import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
+import { Banco, EstadoPago, TarjetaCredito } from 'src/shared/enums';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 export class FindAllPaymentsDto extends PaginationDto {
