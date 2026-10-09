@@ -9,7 +9,7 @@ import { EstadoPago, TipoDetallePago } from 'src/generated/prisma/enums';
 import { CreateCobroPuntualDto } from '../../interfaces/dto/create-cobro-puntual.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { PaymentRow } from '../../domain/types/payment.types';
 
 interface DetalleItem {
   rubroId: number;
@@ -35,7 +35,7 @@ export class CreateCobroPuntualUseCase {
   async execute(
     dto: CreateCobroPuntualDto,
     creadoPor = 'SYSTEM',
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     const contratoIdBigInt = BigInt(dto.contratoId);
 
     // 1. Validate the contract exists and is ACTIVO

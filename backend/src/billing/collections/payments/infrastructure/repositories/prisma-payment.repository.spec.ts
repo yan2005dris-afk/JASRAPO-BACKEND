@@ -109,7 +109,7 @@ describe('PrismaPaymentRepository', () => {
 
       expect(result).not.toBeNull();
       expect(result?.pagoId).toBe(1n);
-      expect(result?.montoTotalRecibido).toBe(150);
+      expect(Number(result?.montoTotalRecibido)).toBe(150);
     });
 
     it('should return null when not found', async () => {
@@ -142,7 +142,7 @@ describe('PrismaPaymentRepository', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].saldoFavorId).toBe(1n);
-      expect(result[0].montoSaldo).toBe(25);
+      expect(Number(result[0].montoSaldo)).toBe(25);
     });
   });
 

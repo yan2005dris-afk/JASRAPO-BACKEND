@@ -12,7 +12,7 @@ import {
 import { CreatePaymentDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { PaymentRow } from '../../domain/types/payment.types';
 import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class CreatePaymentUseCase {
   async execute(
     dto: CreatePaymentDto,
     creadoPor = 'SYSTEM',
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     await this.validateHeader(dto);
     this.validateTotals(dto);
 

@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
 import { PaymentDetailResponseDto } from './payment-detail-response.dto';
 import { SaldoFavorResponseDto } from './saldo-favor-response.dto';
-import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { PaymentRow } from '../../domain/types/payment.types';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 export class PaymentResponseDto {
@@ -91,20 +91,20 @@ export class PaymentResponseDto {
     direccionDomicilio: string | null;
   };
 
-  static fromRow(entity: PaymentEntity): PaymentResponseDto {
+  static fromRow(entity: PaymentRow): PaymentResponseDto {
     const dto = new PaymentResponseDto();
     dto.pagoId = String(entity.pagoId);
     dto.clienteId = String(entity.clienteId);
     dto.cajaId = entity.cajaId ? String(entity.cajaId) : null;
-    dto.banco = entity.banco as Banco | null;
-    dto.tarjetaCredito = entity.tarjetaCredito as TarjetaCredito | null;
+    dto.banco = entity.banco;
+    dto.tarjetaCredito = entity.tarjetaCredito;
     dto.comprobanteUrl = entity.comprobanteUrl ?? null;
     dto.fechaPago = DateUtil.formatForFrontend(entity.fechaPago)!;
     dto.montoTotalRecibido = Number(entity.montoTotalRecibido);
     dto.numeroOperacion = entity.numeroOperacion ?? null;
     dto.observaciones = entity.observaciones ?? null;
     dto.referenciaBanco = entity.referenciaBanco ?? null;
-    dto.estadoPago = entity.estadoPago as EstadoPago;
+    dto.estadoPago = entity.estadoPago;
     dto.creadoPor = entity.creadoPor;
     dto.anuladoPor = entity.anuladoPor ?? null;
     dto.fechaAnulacion = DateUtil.formatForFrontend(entity.fechaAnulacion);
@@ -132,7 +132,7 @@ export class PaymentResponseDto {
     return dto;
   }
 
-  static fromRowList(entities: PaymentEntity[]): PaymentResponseDto[] {
+  static fromRowList(entities: PaymentRow[]): PaymentResponseDto[] {
     return entities.map(PaymentResponseDto.fromRow);
   }
 }

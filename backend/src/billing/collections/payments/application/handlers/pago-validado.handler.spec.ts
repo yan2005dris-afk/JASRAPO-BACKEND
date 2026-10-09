@@ -4,7 +4,8 @@ jest.mock('../../../../../infrastructure/audit/audit.service', () => ({
 }));
 import { PagoValidadoHandler } from './pago-validado.handler';
 import type { SRIEmissionDispatcherService } from '../../../../../sri/emision/application/services/sri-emission-dispatcher.service';
-import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
+import { PaymentDetailRow } from '../../domain/types/payment.types';
+import { paymentDetailRow } from '../../__test-utils__/payment-row.factory';
 
 const mockLogger = {
   log: jest.fn(),
@@ -39,7 +40,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
   });
 
   function createDetallePago(overrides = {}) {
-    return new PaymentDetailEntity({
+    return paymentDetailRow({
       detallePagoId: BigInt(1),
       pagoId: BigInt(1),
       comprobanteId: BigInt(42),

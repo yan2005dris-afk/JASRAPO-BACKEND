@@ -2,8 +2,13 @@ import { BadRequestException } from '@nestjs/common';
 import { ApplySaldoFavorUseCase } from './apply-saldo-favor.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 import type { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
-import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import { SaldoFavorRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('ApplySaldoFavorUseCase', () => {
   const repository = {
@@ -22,7 +27,7 @@ describe('ApplySaldoFavorUseCase', () => {
   } as unknown as jest.Mocked<EventosPendientesRepository>;
   const useCase = new ApplySaldoFavorUseCase(repository, eventosRepository);
 
-  const mockPayment = new PaymentEntity({
+  const mockPayment = paymentRow({
     pagoId: 2n,
     clienteId: 1n,
     montoTotalRecibido: 10,
@@ -84,7 +89,7 @@ describe('ApplySaldoFavorUseCase', () => {
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
       repository.findSaldoFavorById.mockResolvedValue(
-        new SaldoFavorEntity({
+        saldoFavorRow({
           saldoFavorId: 1n,
           clienteId: 1n,
           montoSaldo: 10,
@@ -120,7 +125,7 @@ describe('ApplySaldoFavorUseCase', () => {
     const tx = Symbol('tx') as any;
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       repository.findSaldoFavorById.mockResolvedValue(
-        new SaldoFavorEntity({
+        saldoFavorRow({
           saldoFavorId: 1n,
           clienteId: 1n,
           montoSaldo: 100,
@@ -167,7 +172,7 @@ describe('ApplySaldoFavorUseCase', () => {
     const tx = Symbol('tx') as any;
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       repository.findSaldoFavorById.mockResolvedValue(
-        new SaldoFavorEntity({
+        saldoFavorRow({
           saldoFavorId: 1n,
           clienteId: 1n,
           montoSaldo: 100,
@@ -211,7 +216,7 @@ describe('ApplySaldoFavorUseCase', () => {
     const tx = Symbol('tx') as any;
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       repository.findSaldoFavorById.mockResolvedValue(
-        new SaldoFavorEntity({
+        saldoFavorRow({
           saldoFavorId: 1n,
           clienteId: 1n,
           montoSaldo: 100,

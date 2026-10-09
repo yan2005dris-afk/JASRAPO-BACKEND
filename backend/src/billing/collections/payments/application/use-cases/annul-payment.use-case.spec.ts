@@ -3,8 +3,13 @@ import { EstadoPago } from 'src/generated/prisma/enums';
 import { AnnulPaymentUseCase } from './annul-payment.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 import type { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
-import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import { PaymentDetailRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('AnnulPaymentUseCase', () => {
   const repository = {
@@ -43,13 +48,13 @@ describe('AnnulPaymentUseCase', () => {
   });
 
   it('should annul pending payment', async () => {
-    const pendingPayment = new PaymentEntity({
+    const pendingPayment = paymentRow({
       pagoId: 1n,
       estadoPago: EstadoPago.PENDIENTE,
       deletedAt: null,
       detallePago: [],
     });
-    const annulledPayment = new PaymentEntity({
+    const annulledPayment = paymentRow({
       pagoId: 1n,
       estadoPago: EstadoPago.ANULADO,
     });
@@ -75,19 +80,19 @@ describe('AnnulPaymentUseCase', () => {
   });
 
   it('should revert CUOTA_CONVENIO installment when annulling', async () => {
-    const registeredPayment = new PaymentEntity({
+    const registeredPayment = paymentRow({
       pagoId: 1n,
       estadoPago: EstadoPago.REGISTRADO,
       deletedAt: null,
       detallePago: [
-        new PaymentDetailEntity({
+        paymentDetailRow({
           tipoPago: 'CUOTA_CONVENIO',
           montoAbonado: 50,
           cuotaConvenioId: 99n,
         }),
       ],
     });
-    const annulledPayment = new PaymentEntity({
+    const annulledPayment = paymentRow({
       pagoId: 1n,
       estadoPago: EstadoPago.ANULADO,
     });
@@ -127,7 +132,7 @@ describe('AnnulPaymentUseCase', () => {
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
       repository.findById.mockResolvedValueOnce(
-        new PaymentEntity({
+        paymentRow({
           pagoId: 1n,
           estadoPago: EstadoPago.ANULADO,
           deletedAt: null,
@@ -146,7 +151,7 @@ describe('AnnulPaymentUseCase', () => {
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
       repository.findById.mockResolvedValueOnce(
-        new PaymentEntity({
+        paymentRow({
           pagoId: 1n,
           estadoPago: EstadoPago.PENDIENTE,
           deletedAt: null,

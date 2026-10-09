@@ -1,7 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 import { EstadoPago } from '../../domain/enums';
 import { ValidatePaymentUseCase } from './validate-payment.use-case';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('ValidatePaymentUseCase', () => {
   const repository = {
@@ -14,7 +19,7 @@ describe('ValidatePaymentUseCase', () => {
   const eventosPendientesRepository = { createPending: jest.fn() };
   let useCase: ValidatePaymentUseCase;
 
-  const mockPayment = new PaymentEntity({
+  const mockPayment = paymentRow({
     pagoId: 1n,
     estadoPago: EstadoPago.PENDIENTE,
     clienteId: 10n,
@@ -40,7 +45,7 @@ describe('ValidatePaymentUseCase', () => {
 
   it('should allow PENDIENTE to REGISTRADO', async () => {
     findOne.execute.mockResolvedValue(mockPayment);
-    const updatedPayment = new PaymentEntity({
+    const updatedPayment = paymentRow({
       ...mockPayment,
       estadoPago: EstadoPago.REGISTRADO,
     });
@@ -56,7 +61,7 @@ describe('ValidatePaymentUseCase', () => {
 
   it('should reject invalid transition from ANULADO', async () => {
     findOne.execute.mockResolvedValue(
-      new PaymentEntity({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
+      paymentRow({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
     );
 
     await expect(
@@ -66,7 +71,7 @@ describe('ValidatePaymentUseCase', () => {
 
   it('should delegate annul transition', async () => {
     findOne.execute.mockResolvedValue(mockPayment);
-    const annulledPayment = new PaymentEntity({
+    const annulledPayment = paymentRow({
       ...mockPayment,
       estadoPago: EstadoPago.ANULADO,
     });
@@ -87,10 +92,10 @@ describe('ValidatePaymentUseCase', () => {
 
   it('should persist a pago.validado outbox row inside the same tx that updates the pago', async () => {
     findOne.execute.mockResolvedValue(
-      new PaymentEntity({ ...mockPayment, pagoId: 7n }),
+      paymentRow({ ...mockPayment, pagoId: 7n }),
     );
     repository.findById.mockResolvedValue(
-      new PaymentEntity({
+      paymentRow({
         ...mockPayment,
         pagoId: 7n,
         estadoPago: EstadoPago.REGISTRADO,
@@ -111,7 +116,7 @@ describe('ValidatePaymentUseCase', () => {
 
   it('should ensure atomicity: if createPending throws inside the tx, the use case surfaces the error', async () => {
     findOne.execute.mockResolvedValue(
-      new PaymentEntity({ ...mockPayment, pagoId: 99n }),
+      paymentRow({ ...mockPayment, pagoId: 99n }),
     );
     repository.executeTransaction.mockImplementation(
       async (cb: (tx: unknown) => Promise<unknown>) => cb({}),

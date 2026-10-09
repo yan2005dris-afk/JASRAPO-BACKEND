@@ -1,41 +1,47 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TipoDetallePago } from 'src/generated/prisma/enums';
-import type { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
+import { Decimal } from 'decimal.js';
+import type { PaymentDetailRow } from '../../domain/types/payment.types';
 import { DateUtil } from 'src/shared/utils/date.util';
+
+export class PaymentDetailPrefacturaNestedDto {
+  @ApiProperty({ example: '1', description: 'ID de la prefactura' })
+  prefacturaId: string;
+
+  @ApiProperty({ example: 6, description: 'Mes' })
+  mes: number;
+
+  @ApiProperty({ example: 100, description: 'Total a pagar' })
+  totalPagar: number;
+
+  @ApiProperty({
+    example: 10,
+    nullable: true,
+    description: 'Consumo m3',
+  })
+  consumoM3: number | null;
+
+  @ApiPropertyOptional({ description: 'Nombre del periodo' })
+  periodoNombre?: string;
+}
 
 export class PaymentDetailComprobanteDto {
   @ApiProperty({ example: '1', description: 'ID del comprobante' })
   comprobanteId: string;
 
-  @ApiProperty({ example: '01', description: 'Tipo de comprobante SRI' })
+  @ApiProperty({ example: 'FACTURA', description: 'Tipo de comprobante' })
   tipoComprobante: string;
 
-  @ApiProperty({
-    example: '000000123',
-    description: 'Secuencial del comprobante',
-  })
+  @ApiProperty({ example: '001-001-000000001', description: 'Secuencial' })
   secuencial: string;
 
-  @ApiPropertyOptional({
-    example: 25.5,
-    description: 'Importe total del comprobante',
-  })
+  @ApiProperty({ example: 100, description: 'Importe total' })
   importeTotal: number | null;
 
-  @ApiProperty({
-    example: 'AUTORIZADO',
-    description: 'Estado actual del comprobante',
-  })
+  @ApiProperty({ example: 'AUTORIZADO', description: 'Estado' })
   estado: string;
 
-  @ApiPropertyOptional({ description: 'Datos de la prefactura asociada' })
-  prefactura?: {
-    prefacturaId: string;
-    mes?: number;
-    totalPagar?: number;
-    consumoM3?: number | null;
-    periodoNombre?: string;
-  };
+  @ApiPropertyOptional({ type: PaymentDetailPrefacturaNestedDto })
+  prefactura?: PaymentDetailPrefacturaNestedDto;
 }
 
 export class PaymentDetailResponseDto {
@@ -46,31 +52,30 @@ export class PaymentDetailResponseDto {
   pagoId: string;
 
   @ApiPropertyOptional({
-    example: '10',
-    description: 'ID del comprobante aplicado',
+    example: '1',
+    nullable: true,
+    description: 'ID del comprobante',
   })
-  comprobanteId: string | null;
+  comprobanteId?: string | null;
 
   @ApiPropertyOptional({
-    example: '3',
-    description: 'ID de cuota de convenio aplicada',
+    example: '1',
+    nullable: true,
+    description: 'ID de la cuota de convenio',
   })
-  cuotaConvenioId: string | null;
+  cuotaConvenioId?: string | null;
 
-  @ApiProperty({ enum: TipoDetallePago, example: 'COMPROBANTE' })
-  tipoPago: TipoDetallePago;
+  @ApiProperty({ example: 'COMPROBANTE', description: 'Tipo de pago' })
+  tipoPago: string;
 
-  @ApiProperty({ example: 20.5, description: 'Monto aplicado a este detalle' })
+  @ApiProperty({ example: 50, description: 'Monto abonado' })
   montoAbonado: number;
 
-  @ApiProperty({ example: 1, description: 'ID de la forma de pago SRI' })
+  @ApiProperty({ example: 1, description: 'ID de la forma de pago' })
   formaPagoId: number;
 
-  @ApiPropertyOptional({
-    example: 'REF-001',
-    description: 'Referencia del detalle',
-  })
-  referencia: string | null;
+  @ApiPropertyOptional({ description: 'Referencia' })
+  referencia?: string | null;
 
   @ApiPropertyOptional({
     example: '2026-06-18',
@@ -84,7 +89,7 @@ export class PaymentDetailResponseDto {
   @ApiPropertyOptional({ type: PaymentDetailComprobanteDto })
   comprobante?: PaymentDetailComprobanteDto;
 
-  static fromRow(entity: PaymentDetailEntity): PaymentDetailResponseDto {
+  static fromRow(entity: PaymentDetailRow): PaymentDetailResponseDto {
     const dto = new PaymentDetailResponseDto();
     dto.detallePagoId = String(entity.detallePagoId);
     dto.pagoId = String(entity.pagoId);
@@ -94,26 +99,60 @@ export class PaymentDetailResponseDto {
     dto.cuotaConvenioId = entity.cuotaConvenioId
       ? String(entity.cuotaConvenioId)
       : null;
-    dto.tipoPago = entity.tipoPago as TipoDetallePago;
+    dto.tipoPago = entity.tipoPago;
     dto.montoAbonado = Number(entity.montoAbonado);
     dto.formaPagoId = entity.formaPagoId;
     dto.referencia = entity.referencia ?? null;
     dto.fechaTransaccion = DateUtil.formatForFrontend(entity.fechaTransaccion);
     dto.fechaCreacion = DateUtil.formatForFrontend(entity.createdAt)!;
-    dto.comprobante = entity.comprobante
+    // Cast: `entity.comprobante` puede no existir (cuando la query
+    // no lo incluye via el `select` minimo). El cast explicito nos
+    // permite acceder a la relation cuando existe, sin que TypeScript
+    // se queje de la varianza. Los consumers no acceden a
+    // `comprobante.prefactura` aqui.
+    const comprobante = (
+      entity as unknown as {
+        comprobante?: {
+          comprobanteId?: bigint | null;
+          tipoComprobante?: string | null;
+          secuencial?: string | null;
+          importeTotal?: Decimal | null;
+          estado?: string | null;
+          prefactura?: {
+            prefacturaId: bigint;
+            mes: number;
+            totalPagar: Decimal;
+            consumoM3: Decimal | null;
+            periodoRel?: { nombre: string } | null;
+          } | null;
+        } | null;
+      }
+    ).comprobante;
+    dto.comprobante = comprobante
       ? {
-          comprobanteId: entity.comprobante.comprobanteId,
-          tipoComprobante: entity.comprobante.tipoComprobante ?? '',
-          secuencial: entity.comprobante.secuencial ?? '',
-          importeTotal: entity.comprobante.importeTotal ?? null,
-          estado: entity.comprobante.estado ?? '',
-          prefactura: entity.comprobante.prefactura
+          comprobanteId: comprobante.comprobanteId
+            ? String(comprobante.comprobanteId)
+            : '',
+          tipoComprobante: comprobante.tipoComprobante ?? '',
+          secuencial: comprobante.secuencial ?? '',
+          importeTotal:
+            comprobante.importeTotal instanceof Decimal
+              ? comprobante.importeTotal.toNumber()
+              : (comprobante.importeTotal ?? null),
+          estado: comprobante.estado ?? '',
+          prefactura: comprobante.prefactura
             ? {
-                prefacturaId: entity.comprobante.prefactura.prefacturaId,
-                mes: entity.comprobante.prefactura.mes,
-                totalPagar: entity.comprobante.prefactura.totalPagar,
-                consumoM3: entity.comprobante.prefactura.consumoM3,
-                periodoNombre: entity.comprobante.prefactura.periodoNombre,
+                prefacturaId: String(comprobante.prefactura.prefacturaId),
+                mes: comprobante.prefactura.mes,
+                totalPagar:
+                  comprobante.prefactura.totalPagar instanceof Decimal
+                    ? comprobante.prefactura.totalPagar.toNumber()
+                    : Number(comprobante.prefactura.totalPagar),
+                consumoM3:
+                  comprobante.prefactura.consumoM3 instanceof Decimal
+                    ? comprobante.prefactura.consumoM3.toNumber()
+                    : Number(comprobante.prefactura.consumoM3),
+                periodoNombre: comprobante.prefactura.periodoRel?.nombre,
               }
             : undefined,
         }
@@ -121,9 +160,7 @@ export class PaymentDetailResponseDto {
     return dto;
   }
 
-  static fromRowList(
-    entities: PaymentDetailEntity[],
-  ): PaymentDetailResponseDto[] {
+  static fromRowList(entities: PaymentDetailRow[]): PaymentDetailResponseDto[] {
     return entities.map(PaymentDetailResponseDto.fromRow);
   }
 }

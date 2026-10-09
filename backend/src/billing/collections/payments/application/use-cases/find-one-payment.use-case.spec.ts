@@ -1,9 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { FindOnePaymentUseCase } from './find-one-payment.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
-import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
-import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import { PaymentDetailRow } from '../../domain/types/payment.types';
+import { SaldoFavorRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('FindOnePaymentUseCase', () => {
   const repository = {
@@ -14,7 +19,7 @@ describe('FindOnePaymentUseCase', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('should return payment when it exists', async () => {
-    const mockPayment = new PaymentEntity({
+    const mockPayment = paymentRow({
       pagoId: 1n,
       deletedAt: null,
     });
@@ -29,7 +34,7 @@ describe('FindOnePaymentUseCase', () => {
 
   it('should throw NotFoundException when payment has deletedAt set', async () => {
     repository.findById.mockResolvedValue(
-      new PaymentEntity({
+      paymentRow({
         pagoId: 1n,
         deletedAt: new Date('2026-06-18'),
       }),
@@ -38,13 +43,13 @@ describe('FindOnePaymentUseCase', () => {
   });
 
   it('should return payment with full detail and saldos', async () => {
-    const mockPayment = new PaymentEntity({
+    const mockPayment = paymentRow({
       pagoId: 1n,
       clienteId: 1n,
       deletedAt: null,
       estadoPago: 'REGISTRADO',
       detallePago: [
-        new PaymentDetailEntity({
+        paymentDetailRow({
           detallePagoId: 10n,
           tipoPago: 'PAGO_LIBRE',
           montoAbonado: 100,
@@ -52,7 +57,7 @@ describe('FindOnePaymentUseCase', () => {
         }),
       ],
       saldosFavor: [
-        new SaldoFavorEntity({
+        saldoFavorRow({
           saldoFavorId: 20n,
           montoSaldo: 50,
         }),

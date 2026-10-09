@@ -12,10 +12,7 @@ import {
   TarjetaCredito,
 } from 'src/generated/prisma/client';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
-import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
-import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
-import { PaymentMapper } from '../mappers/payment.mapper';
+import { paymentInclude, type PaymentRow } from './payment.include';
 import type {
   PaymentFilters,
   ComprobanteInfo,
@@ -35,53 +32,6 @@ import { Decimal } from 'decimal.js';
 export class PrismaPaymentRepository implements PaymentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly defaultInclude = {
-    cliente: {
-      select: {
-        clienteId: true,
-        nombres: true,
-        apellidos: true,
-        razonSocial: true,
-        identificacion: true,
-        email: true,
-        telefono: true,
-        direccionDomicilio: true,
-      },
-    },
-    detallePago: {
-      where: { deletedAt: null },
-      include: {
-        comprobante: {
-          select: {
-            id: true,
-            tipoComprobante: true,
-            secuencial: true,
-            importeTotal: true,
-            estado: true,
-            prefactura: {
-              select: {
-                prefacturaId: true,
-                mes: true,
-                totalPagar: true,
-                consumoM3: true,
-                periodoRel: {
-                  select: {
-                    nombre: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'asc' as const },
-    },
-    saldosFavor: {
-      where: { deletedAt: null },
-      orderBy: { createdAt: 'desc' as const },
-    },
-  };
-
   private getClient(
     tx?: TransactionContext,
   ): TransactionContext | PrismaService {
@@ -91,19 +41,18 @@ export class PrismaPaymentRepository implements PaymentRepository {
   async findById(
     id: bigint,
     tx?: TransactionContext,
-  ): Promise<PaymentEntity | null> {
+  ): Promise<PaymentRow | null> {
     const client = this.getClient(tx);
-    const record = await client.pagos.findFirst({
+    return client.pagos.findFirst({
       where: { pagoId: id, deletedAt: null },
-      include: this.defaultInclude,
+      include: paymentInclude,
     });
-    return PaymentMapper.toDomain(record);
   }
 
   async paginate(
     pagination: PaginateOptions,
     filters?: PaymentFilters,
-  ): Promise<PaginatedResult<PaymentEntity>> {
+  ): Promise<PaginatedResult<PaymentRow>> {
     const where: Prisma.PagosWhereInput = {
       deletedAt: null,
       ...(filters?.clienteId ? { clienteId: BigInt(filters.clienteId) } : {}),
@@ -117,26 +66,23 @@ export class PrismaPaymentRepository implements PaymentRepository {
       ...this.buildDateFilter(filters?.fechaDesde, filters?.fechaHasta),
     };
 
-    const paginated = await paginate<any>(
+    const paginated = await paginate<PaymentRow>(
       this.prisma.pagos,
       {
         where,
-        include: this.defaultInclude,
+        include: paymentInclude,
         orderBy: { fechaPago: 'desc' },
       },
       pagination,
     );
 
-    return {
-      data: PaymentMapper.toDomainList(paginated.data),
-      meta: paginated.meta,
-    };
+    return paginated;
   }
 
   async findSaldoFavorByCliente(
     clienteId: bigint,
-  ): Promise<SaldoFavorEntity[]> {
-    const records = await this.prisma.saldoFavorCliente.findMany({
+  ): Promise<PaymentRow['saldosFavor']> {
+    return this.prisma.saldoFavorCliente.findMany({
       where: {
         clienteId,
         deletedAt: null,
@@ -144,31 +90,29 @@ export class PrismaPaymentRepository implements PaymentRepository {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return PaymentMapper.toDomainSaldoFavorList(records);
   }
 
   async findDailyCashPayments(params: {
     fechaInicio: Date;
     fechaFin: Date;
     cajaId?: bigint;
-  }): Promise<PaymentEntity[]> {
-    const records = await this.prisma.pagos.findMany({
+  }): Promise<PaymentRow[]> {
+    return this.prisma.pagos.findMany({
       where: {
         deletedAt: null,
         estadoPago: EstadoPago.REGISTRADO,
         fechaPago: { gte: params.fechaInicio, lt: params.fechaFin },
         ...(params.cajaId ? { cajaId: params.cajaId } : {}),
       },
-      include: this.defaultInclude,
+      include: paymentInclude,
       orderBy: { fechaPago: 'asc' },
     });
-    return PaymentMapper.toDomainList(records);
   }
 
   async findPaymentDetailsByPagoId(
     pagoId: bigint,
-  ): Promise<PaymentDetailEntity[]> {
-    const records = await this.prisma.detallePago.findMany({
+  ): Promise<PaymentRow['detallePago']> {
+    return this.prisma.detallePago.findMany({
       where: { pagoId, deletedAt: null },
       include: {
         comprobante: {
@@ -182,14 +126,13 @@ export class PrismaPaymentRepository implements PaymentRepository {
         },
       },
       orderBy: { createdAt: 'asc' },
-    });
-    return PaymentMapper.toDomainDetailList(records);
+    }) as unknown as Promise<PaymentRow['detallePago']>;
   }
 
   async findPaymentDetailsByComprobanteId(
     comprobanteId: bigint,
-  ): Promise<PaymentDetailEntity[]> {
-    const records = await this.prisma.detallePago.findMany({
+  ): Promise<PaymentRow['detallePago']> {
+    return this.prisma.detallePago.findMany({
       where: {
         comprobanteId,
         deletedAt: null,
@@ -211,8 +154,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
         createdAt: true,
         deletedAt: true,
       },
-    });
-    return PaymentMapper.toDomainDetailList(records);
+    }) as unknown as Promise<PaymentRow['detallePago']>;
   }
 
   async clientExists(clienteId: bigint): Promise<boolean> {
@@ -311,12 +253,11 @@ export class PrismaPaymentRepository implements PaymentRepository {
   async findSaldoFavorById(
     saldoFavorId: bigint,
     tx?: TransactionContext,
-  ): Promise<SaldoFavorEntity | null> {
+  ): Promise<PaymentRow['saldosFavor'][number] | null> {
     const client = this.getClient(tx);
-    const record = await client.saldoFavorCliente.findFirst({
+    return client.saldoFavorCliente.findFirst({
       where: { saldoFavorId },
     });
-    return PaymentMapper.toDomainSaldoFavor(record);
   }
 
   async createPagoRecord(

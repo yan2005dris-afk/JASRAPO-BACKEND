@@ -12,8 +12,8 @@ import type {
   DailyCashSummaryParams,
   DailyCashSummaryResult,
 } from '../domain/types/payment.types';
-import type { PaymentEntity } from '../domain/entities/payment.entity';
-import type { SaldoFavorEntity } from '../domain/entities/saldo-favor.entity';
+import type { PaymentRow } from '../domain/types/payment.types';
+import type { SaldoFavorRow } from '../domain/types/payment.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type {
@@ -97,17 +97,14 @@ export class PaymentsService {
     );
   }
 
-  async create(
-    dto: CreatePaymentDto,
-    creadoPor: string,
-  ): Promise<PaymentEntity> {
+  async create(dto: CreatePaymentDto, creadoPor: string): Promise<PaymentRow> {
     return this.createUseCase.execute(dto, creadoPor);
   }
 
   async createCobroPuntual(
     dto: CreateCobroPuntualDto,
     creadoPor: string,
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     return this.createCobroPuntualUseCase.execute(dto, creadoPor);
   }
 
@@ -119,12 +116,12 @@ export class PaymentsService {
     fechaDesde?: string;
     fechaHasta?: string;
     pagination?: PaginateOptions;
-  }): Promise<PaginatedResult<PaymentEntity>> {
+  }): Promise<PaginatedResult<PaymentRow>> {
     const { pagination = { page: 1, limit: 10 }, ...filters } = params;
     return this.paymentRepository.paginate(pagination, filters);
   }
 
-  async findOne(pagoId: bigint): Promise<PaymentEntity> {
+  async findOne(pagoId: bigint): Promise<PaymentRow> {
     return this.findOneUseCase.execute(pagoId);
   }
 
@@ -132,14 +129,14 @@ export class PaymentsService {
     pagoId: bigint,
     dto: { estadoPago: EstadoPago; motivo?: string },
     actualizadoPor?: string,
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     return this.validatePaymentUseCase.execute(pagoId, dto, actualizadoPor);
   }
 
   async annul(
     pagoId: bigint,
     dto: { motivoAnulacion: string; anuladoPor?: string },
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     return this.annulPaymentUseCase.execute(pagoId, dto);
   }
 
@@ -161,16 +158,14 @@ export class PaymentsService {
     }));
   }
 
-  async findSaldoFavorByCliente(
-    clienteId: bigint,
-  ): Promise<SaldoFavorEntity[]> {
+  async findSaldoFavorByCliente(clienteId: bigint): Promise<SaldoFavorRow[]> {
     return this.paymentRepository.findSaldoFavorByCliente(clienteId);
   }
 
   async applySaldoFavor(
     dto: ApplySaldoFavorDto,
     creadoPor?: string,
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     return this.applySaldoFavorUseCase.execute(dto, creadoPor);
   }
 

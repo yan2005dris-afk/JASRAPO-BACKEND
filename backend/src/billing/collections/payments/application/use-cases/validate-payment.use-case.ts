@@ -5,7 +5,7 @@ import { PaymentRepository } from '../../domain/repositories/payment.repository'
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import { FindOnePaymentUseCase } from './find-one-payment.use-case';
 import { AnnulPaymentUseCase } from './annul-payment.use-case';
-import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { PaymentRow } from '../../domain/types/payment.types';
 
 const VALID_TRANSITIONS: Record<EstadoPago, EstadoPago[]> = {
   [EstadoPago.PENDIENTE]: [EstadoPago.REGISTRADO, EstadoPago.ANULADO],
@@ -26,7 +26,7 @@ export class ValidatePaymentUseCase {
     pagoId: bigint,
     dto: UpdatePaymentStateDto,
     actualizadoPor = 'SYSTEM',
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     const pago = await this.findOneUseCase.execute(pagoId);
 
     if (dto.estadoPago === EstadoPago.ANULADO) {
@@ -36,7 +36,7 @@ export class ValidatePaymentUseCase {
       });
     }
 
-    const current = pago.estadoPago as EstadoPago;
+    const current = pago.estadoPago;
     const allowed = VALID_TRANSITIONS[current] ?? [];
 
     if (!allowed.includes(dto.estadoPago)) {

@@ -8,7 +8,7 @@ import { EstadoPago, TipoDetallePago } from 'src/generated/prisma/enums';
 import { ApplySaldoFavorDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { PaymentRow } from '../../domain/types/payment.types';
 
 @Injectable()
 export class ApplySaldoFavorUseCase {
@@ -20,7 +20,7 @@ export class ApplySaldoFavorUseCase {
   async execute(
     dto: ApplySaldoFavorDto,
     creadoPor = 'SYSTEM',
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     if (!dto.comprobanteId && !dto.cuotaConvenioId) {
       throw new BadRequestException(
         'Debe indicar comprobanteId o cuotaConvenioId para aplicar el saldo',
