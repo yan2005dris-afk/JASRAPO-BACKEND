@@ -60,6 +60,7 @@ model Comprobantes {
   @@index([puntoEmisionId])
   @@index([fechaEmision])
   @@index([estado])
+  @@index([estadoSri, fechaEmision])
   @@map("comprobantes")
 }
 

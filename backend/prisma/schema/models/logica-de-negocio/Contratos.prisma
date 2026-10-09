@@ -38,6 +38,7 @@ model Contratos {
   @@index([comunidadId])
   @@index([sectorId])
   @@index([categoriaTarifaId])
+  @@index([deletedAt])
   @@map("contratos")
 }
 
