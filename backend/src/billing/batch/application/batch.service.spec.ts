@@ -5,22 +5,17 @@ import { GenerateBatchUseCase } from './use-cases/generate-batch.use-case';
 import { FindAllBatchesUseCase } from './use-cases/find-all-batches.use-case';
 import { FindOneBatchUseCase } from './use-cases/find-one-batch.use-case';
 import { BatchRepository } from '../domain/repositories/batch.repository';
-import { BatchEntity } from '../domain/entities/batch.entity';
+import { batchRow } from '../__test-utils__/batch-row.factory';
 
 describe('BatchService', () => {
   let service: BatchService;
 
-  const mockBatch = new BatchEntity({
+  const mockBatch = batchRow({
     loteId: BigInt(1),
     comunidadId: 1,
     periodoId: 1,
     estado: 'BORRADOR',
-    totalMonto: 100,
-    notas: null,
     creadoPor: 'admin',
-    totalEmisiones: 10,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   const mockGenerateUseCase = { execute: jest.fn() };

@@ -2,22 +2,16 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllBatchesUseCase } from './find-all-batches.use-case';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
-import { BatchEntity } from '../../domain/entities/batch.entity';
+import { batchRow } from '../../__test-utils__/batch-row.factory';
 
 describe('FindAllBatchesUseCase', () => {
   let useCase: FindAllBatchesUseCase;
 
-  const mockBatch = new BatchEntity({
+  const mockBatch = batchRow({
     loteId: BigInt(1),
     comunidadId: 1,
     periodoId: 1,
     estado: 'BORRADOR',
-    totalMonto: 100,
-    notas: null,
-    creadoPor: 'admin',
-    totalEmisiones: 10,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   const mockRepository = {

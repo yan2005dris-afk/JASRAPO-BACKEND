@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { BatchEntity } from '../../domain/entities/batch.entity';
+import type { BatchRow } from '../../domain/types/batch.types';
 import { PreInvoiceResponseDto } from '../../../pre-invoice/interfaces/dto/pre-invoice-response.dto';
 
 export class BatchCommunityResponseDto {
@@ -107,7 +107,7 @@ export class BatchResponseDto {
   })
   prefacturas?: PreInvoiceResponseDto[];
 
-  static fromRow(entity: BatchEntity): BatchResponseDto {
+  static fromRow(entity: BatchRow): BatchResponseDto {
     const dto = new BatchResponseDto();
     dto.loteId = Number(entity.loteId);
     dto.comunidadId = entity.comunidadId;
@@ -141,13 +141,20 @@ export class BatchResponseDto {
           fechaFin: entity.periodoRel.fechaFin ?? null,
         }
       : null;
-    dto.prefacturas = entity.prefacturas
-      ? PreInvoiceResponseDto.fromRowList(entity.prefacturas)
+    // `prefacturas` no esta en BatchRow (el default include no la trae).
+    // Solo se hidrata en `findById` con un include nested. Hacemos cast
+    // explicito en runtime para proyectar las prefacturas cuando el
+    // caller las trae; si no, queda undefined.
+    const entityWithPrefacturas = entity as unknown as {
+      prefacturas?: Parameters<typeof PreInvoiceResponseDto.fromRowList>[0];
+    };
+    dto.prefacturas = entityWithPrefacturas.prefacturas
+      ? PreInvoiceResponseDto.fromRowList(entityWithPrefacturas.prefacturas)
       : undefined;
     return dto;
   }
 
-  static fromRowList(entities: BatchEntity[]): BatchResponseDto[] {
+  static fromRowList(entities: BatchRow[]): BatchResponseDto[] {
     return entities.map(BatchResponseDto.fromRow);
   }
 }
