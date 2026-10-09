@@ -1,4 +1,4 @@
-import type { CommunityEntity } from '../entities/community.entity';
+import type { CommunityRow } from '../types/community.types';
 import type {
   CreateCommunityData,
   UpdateCommunityData,
@@ -9,31 +9,28 @@ export abstract class CommunityRepository {
   abstract findById(
     id: number,
     includeDeleted?: boolean,
-  ): Promise<CommunityEntity | null>;
+  ): Promise<CommunityRow | null>;
 
-  abstract findByCodigo(codigo: string): Promise<CommunityEntity | null>;
+  abstract findByCodigo(codigo: string): Promise<CommunityRow | null>;
 
   abstract findActiveByNameOrCode(
     nombre: string,
     codigo: string,
-  ): Promise<CommunityEntity | null>;
+  ): Promise<CommunityRow | null>;
 
   abstract paginate(
     filters: CommunityFilters,
     pagination: { skip: number; take: number },
-  ): Promise<{ data: CommunityEntity[]; total: number }>;
+  ): Promise<{ data: CommunityRow[]; total: number }>;
 
-  abstract create(data: CreateCommunityData): Promise<CommunityEntity>;
+  abstract create(data: CreateCommunityData): Promise<CommunityRow>;
 
-  abstract update(
-    id: number,
-    data: UpdateCommunityData,
-  ): Promise<CommunityEntity>;
+  abstract update(id: number, data: UpdateCommunityData): Promise<CommunityRow>;
 
   abstract reactivate(
     id: number,
     data: Partial<CreateCommunityData>,
-  ): Promise<CommunityEntity>;
+  ): Promise<CommunityRow>;
 
-  abstract softDelete(id: number): Promise<CommunityEntity>;
+  abstract softDelete(id: number): Promise<CommunityRow>;
 }

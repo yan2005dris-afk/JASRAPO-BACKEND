@@ -2,7 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ComunidadController } from './comunidad.controller';
 import { ComunidadService } from '../../application/comunidad.service';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { communityRow } from '../../__test-utils__/community-row.factory';
+import { Prisma } from 'src/generated/prisma/client';
 import type { CommunityFilterDto } from '../dto/community-filter.dto';
 
 describe('ComunidadController', () => {
@@ -16,15 +17,12 @@ describe('ComunidadController', () => {
     delete: jest.fn(),
   };
 
-  const sampleEntity = new CommunityEntity({
+  const sampleEntity = communityRow({
     comunidadId: 1,
     nombre: 'Comunidad Test',
     codigo: 'CT-001',
-    porcentajeTasaSeguridad: 5,
-    sectores: [{ sectorId: 1, nombre: 'Sector 1', codigo: 'S1' }],
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-    deletedAt: null,
+    porcentajeTasaSeguridad: new Prisma.Decimal(5),
+    sector: [{ sectorId: 1, nombre: 'Sector 1', codigo: 'S1' }],
   });
 
   beforeEach(async () => {

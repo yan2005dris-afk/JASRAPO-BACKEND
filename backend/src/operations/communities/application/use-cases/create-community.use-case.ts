@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
 import { CreateComunidadDto } from '../../interfaces/dto/create-comunidad.dto';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import type { CommunityRow } from '../../domain/types/community.types';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class CreateCommunityUseCase {
   constructor(private readonly communityRepository: CommunityRepository) {}
 
-  async execute(dto: CreateComunidadDto): Promise<CommunityEntity> {
+  async execute(dto: CreateComunidadDto): Promise<CommunityRow> {
     const existing = await this.communityRepository.findActiveByNameOrCode(
       dto.nombre,
       dto.codigo,

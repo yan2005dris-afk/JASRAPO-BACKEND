@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { CommunityEntity } from '../../domain/entities/community.entity';
+import type { CommunityRow } from '../../domain/types/community.types';
 
 export class SectorItemDto {
   @ApiProperty({ example: 1 })
@@ -58,20 +58,25 @@ export class CommunityResponseDto {
   })
   updatedAt: Date;
 
-  static fromEntity(entity: CommunityEntity): CommunityResponseDto {
+  static fromRow(row: CommunityRow): CommunityResponseDto {
     const dto = new CommunityResponseDto();
-    dto.comunidadId = entity.comunidadId;
-    dto.nombre = entity.nombre;
-    dto.codigo = entity.codigo;
-    dto.porcentajeTasaSeguridad = entity.porcentajeTasaSeguridad ?? null;
-    dto.sectores = entity.sectores;
-    dto.deletedAt = entity.deletedAt;
-    dto.createdAt = entity.createdAt;
-    dto.updatedAt = entity.updatedAt;
+    dto.comunidadId = row.comunidadId;
+    dto.nombre = row.nombre;
+    dto.codigo = row.codigo;
+    // Coercion Prisma.Decimal -> number; el row Prisma llega como Decimal
+    // porque el schema usa @db.Decimal(18, 2).
+    dto.porcentajeTasaSeguridad =
+      row.porcentajeTasaSeguridad != null
+        ? Number(row.porcentajeTasaSeguridad)
+        : null;
+    dto.sectores = (row.sector ?? []) as SectorItemDto[];
+    dto.deletedAt = row.deletedAt;
+    dto.createdAt = row.createdAt;
+    dto.updatedAt = row.updatedAt;
     return dto;
   }
 
-  static fromEntityList(entities: CommunityEntity[]): CommunityResponseDto[] {
-    return entities.map((e) => CommunityResponseDto.fromEntity(e));
+  static fromRowList(rows: CommunityRow[]): CommunityResponseDto[] {
+    return rows.map((r) => CommunityResponseDto.fromRow(r));
   }
 }

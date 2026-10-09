@@ -54,7 +54,7 @@ export class ComunidadController {
     @Body() createComunidadDto: CreateComunidadDto,
   ): Promise<CommunityResponseDto> {
     const result = await this.comunidadService.create(createComunidadDto);
-    return CommunityResponseDto.fromEntity(result);
+    return CommunityResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -75,7 +75,7 @@ export class ComunidadController {
       filters,
     );
     return {
-      data: CommunityResponseDto.fromEntityList(result.data),
+      data: CommunityResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -103,7 +103,7 @@ export class ComunidadController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<CommunityResponseDto> {
     const result = await this.comunidadService.findOne(id);
-    return CommunityResponseDto.fromEntity(result);
+    return CommunityResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -133,7 +133,7 @@ export class ComunidadController {
     @Body() updateComunidadDto: UpdateComunidadDto,
   ): Promise<CommunityResponseDto> {
     const result = await this.comunidadService.update(id, updateComunidadDto);
-    return CommunityResponseDto.fromEntity(result);
+    return CommunityResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -156,6 +156,6 @@ export class ComunidadController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<CommunityResponseDto> {
     const result = await this.comunidadService.delete(id);
-    return CommunityResponseDto.fromEntity(result);
+    return CommunityResponseDto.fromRow(result);
   }
 }

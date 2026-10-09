@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateCommunityUseCase } from './create-community.use-case';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { communityRow } from '../../__test-utils__/community-row.factory';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateCommunityUseCase', () => {
@@ -40,12 +40,9 @@ describe('CreateCommunityUseCase', () => {
       codigo: 'CT-001',
       porcentajeTasaSeguridad: 5,
     };
-    const expected = new CommunityEntity({
+    const expected = communityRow({
       comunidadId: 1,
       ...dto,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: null,
     });
     mockCommunityRepository.create.mockResolvedValue(expected);
 
@@ -66,12 +63,11 @@ describe('CreateCommunityUseCase', () => {
       porcentajeTasaSeguridad: 5,
     };
     mockCommunityRepository.findActiveByNameOrCode.mockResolvedValue(
-      new CommunityEntity({
+      communityRow({
         comunidadId: 2,
         nombre: 'Comunidad test',
         codigo: 'CT-002',
         porcentajeTasaSeguridad: 5,
-        deletedAt: null,
       }),
     );
 
@@ -87,12 +83,11 @@ describe('CreateCommunityUseCase', () => {
       porcentajeTasaSeguridad: 5,
     };
     mockCommunityRepository.findActiveByNameOrCode.mockResolvedValue(
-      new CommunityEntity({
+      communityRow({
         comunidadId: 2,
         nombre: 'Comunidad Vieja',
         codigo: 'CT-001',
         porcentajeTasaSeguridad: 5,
-        deletedAt: null,
       }),
     );
 
@@ -107,14 +102,14 @@ describe('CreateCommunityUseCase', () => {
       codigo: 'CT-001',
       porcentajeTasaSeguridad: 10,
     };
-    const deletedEntity = new CommunityEntity({
+    const deletedEntity = communityRow({
       comunidadId: 5,
       nombre: 'Comunidad Test',
       codigo: 'CT-001',
       porcentajeTasaSeguridad: 5,
       deletedAt: new Date(),
     });
-    const reactivatedEntity = new CommunityEntity({
+    const reactivatedEntity = communityRow({
       comunidadId: 5,
       nombre: 'Comunidad Test',
       codigo: 'CT-001',
