@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { PermissionEntity } from '../../domain/entities/permission.entity';
+import type { PermissionRow } from '../../domain/types/permission.types';
 
 export class PermissionResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del permiso' })
@@ -23,7 +23,7 @@ export class PermissionResponseDto {
   @ApiProperty({ example: 'read', description: 'Acción permitida' })
   accion: string;
 
-  static fromEntity(permission: PermissionEntity): PermissionResponseDto {
+  static fromRow(permission: PermissionRow): PermissionResponseDto {
     const dto = new PermissionResponseDto();
     dto.permisoId = permission.permisoId;
     dto.nombre = permission.nombre;

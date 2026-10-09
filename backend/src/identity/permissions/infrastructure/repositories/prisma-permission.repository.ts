@@ -1,39 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  PermissionRepository,
+import { PermissionRepository } from '../../domain/repositories/permission.repository';
+import { permissionInclude, type PermissionRow } from './permission.include';
+import type {
   CreatePermissionRepositoryData,
   UpdatePermissionRepositoryData,
-  PermissionEntity,
-} from '../../domain/repositories/permission.repository';
-import { PermissionMapper } from '../mappers/permission.mapper';
+} from '../../domain/types/permission.types';
 
 @Injectable()
 export class PrismaPermissionRepository implements PermissionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    data: CreatePermissionRepositoryData,
-  ): Promise<PermissionEntity> {
-    const raw = await this.prisma.permisos.create({
+  async create(data: CreatePermissionRepositoryData): Promise<PermissionRow> {
+    return this.prisma.permisos.create({
       data: {
         nombre: data.nombre,
         descripcion: data.descripcion,
         recurso: data.recurso,
         accion: data.accion,
       },
+      include: permissionInclude,
     });
-    return PermissionMapper.toEntity(raw)!;
   }
 
-  async findAll(skip?: number, take?: number): Promise<PermissionEntity[]> {
-    const permissions = await this.prisma.permisos.findMany({
+  async findAll(skip?: number, take?: number): Promise<PermissionRow[]> {
+    return this.prisma.permisos.findMany({
       where: { deletedAt: null },
       orderBy: [{ recurso: 'asc' }, { accion: 'asc' }],
       skip,
       take,
+      include: permissionInclude,
     });
-    return permissions.map((p) => PermissionMapper.toEntity(p)!);
   }
 
   async count(params?: { where?: Record<string, any> }): Promise<number> {
@@ -42,21 +39,21 @@ export class PrismaPermissionRepository implements PermissionRepository {
     });
   }
 
-  async findUnique(permisoId: number): Promise<PermissionEntity | null> {
-    const permission = await this.prisma.permisos.findUnique({
+  async findUnique(permisoId: number): Promise<PermissionRow | null> {
+    return this.prisma.permisos.findUnique({
       where: { permisoId },
+      include: permissionInclude,
     });
-    return PermissionMapper.toEntity(permission);
   }
 
   async update(
     permisoId: number,
     data: UpdatePermissionRepositoryData,
-  ): Promise<PermissionEntity> {
-    const permission = await this.prisma.permisos.update({
+  ): Promise<PermissionRow> {
+    return this.prisma.permisos.update({
       where: { permisoId },
       data,
+      include: permissionInclude,
     });
-    return PermissionMapper.toEntity(permission)!;
   }
 }
