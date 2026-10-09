@@ -46,7 +46,7 @@ export class RubrosController {
   @RequiredPermission('rubros', 'read')
   @Get('tarifas-impuesto')
   async getTarifasImpuesto(): Promise<TarifaImpuestoResponseDto[]> {
-    return this.rubrosService.getTarifasImpuesto() as TarifaImpuestoResponseDto[];
+    return this.rubrosService.getTarifasImpuesto();
   }
 
   @ApiOperation({ summary: 'Crear un nuevo rubro' })
@@ -117,7 +117,7 @@ export class RubrosController {
     // findOne use case lanza EntityNotFoundException si no existe,
     // asi que el row siempre viene no-null.
     const row = await this.rubrosService.findOne(id);
-    return RubroResponseDto.fromRow(row!);
+    return RubroResponseDto.fromRow(row);
   }
 
   @ApiOperation({ summary: 'Actualizar un rubro por ID' })
