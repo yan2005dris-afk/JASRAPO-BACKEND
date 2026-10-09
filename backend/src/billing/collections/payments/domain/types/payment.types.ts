@@ -10,8 +10,8 @@
  * Si en el futuro se cambia el ORM, este es el unico archivo del BC
  * a migrar las firmas de los re-exports.
  *
- * Antes existian las entities `PaymentEntity`, `PaymentDetailEntity` y
- * `SaldoFavorEntity` (anemicas con Object.assign) y la interface
+ * Antes existian las entities `PaymentRow`, `PaymentDetailRow` y
+ * `SaldoFavorRow` (anemicas con Object.assign) y la interface
  * `ComprobantePaymentRef`. Eliminadas en #366 Nivel 2; el re-export
  * incluye ahora solo los tipos derivados del row Prisma.
  */

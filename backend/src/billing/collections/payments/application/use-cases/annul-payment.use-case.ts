@@ -7,7 +7,7 @@ import { Decimal } from 'decimal.js';
 import { EstadoPago, TipoDetallePago } from '../../domain/enums';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { PaymentRow } from '../../domain/types/payment.types';
 import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class AnnulPaymentUseCase {
   async execute(
     pagoId: bigint,
     dto: { motivoAnulacion: string; anuladoPor?: string },
-  ): Promise<PaymentEntity> {
+  ): Promise<PaymentRow> {
     if (!dto.motivoAnulacion?.trim()) {
       throw new BadRequestException('El motivo de anulación es obligatorio');
     }

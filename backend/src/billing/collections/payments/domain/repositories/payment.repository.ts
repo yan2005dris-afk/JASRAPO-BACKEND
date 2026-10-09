@@ -1,6 +1,8 @@
-import type { PaymentEntity } from '../entities/payment.entity';
-import type { PaymentDetailEntity } from '../entities/payment-detail.entity';
-import type { SaldoFavorEntity } from '../entities/saldo-favor.entity';
+import type {
+  PaymentRow,
+  PaymentDetailRow,
+  SaldoFavorRow,
+} from '../types/payment.types';
 import type {
   PaymentFilters,
   ComprobanteInfo,
@@ -17,30 +19,28 @@ export abstract class PaymentRepository {
   abstract findById(
     id: bigint,
     tx?: TransactionContext,
-  ): Promise<PaymentEntity | null>;
+  ): Promise<PaymentRow | null>;
 
   abstract paginate(
     pagination: PaginateOptions,
     filters?: PaymentFilters,
-  ): Promise<PaginatedResult<PaymentEntity>>;
+  ): Promise<PaginatedResult<PaymentRow>>;
 
-  abstract findSaldoFavorByCliente(
-    clienteId: bigint,
-  ): Promise<SaldoFavorEntity[]>;
+  abstract findSaldoFavorByCliente(clienteId: bigint): Promise<SaldoFavorRow[]>;
 
   abstract findDailyCashPayments(params: {
     fechaInicio: Date;
     fechaFin: Date;
     cajaId?: bigint;
-  }): Promise<PaymentEntity[]>;
+  }): Promise<PaymentRow[]>;
 
   abstract findPaymentDetailsByPagoId(
     pagoId: bigint,
-  ): Promise<PaymentDetailEntity[]>;
+  ): Promise<PaymentDetailRow[]>;
 
   abstract findPaymentDetailsByComprobanteId(
     comprobanteId: bigint,
-  ): Promise<PaymentDetailEntity[]>;
+  ): Promise<PaymentDetailRow[]>;
 
   abstract clientExists(clienteId: bigint): Promise<boolean>;
 
@@ -68,8 +68,8 @@ export abstract class PaymentRepository {
 
   abstract findSaldoFavorById(
     saldoFavorId: bigint,
-    tx?: unknown,
-  ): Promise<SaldoFavorEntity | null>;
+    tx?: TransactionContext,
+  ): Promise<SaldoFavorRow | null>;
 
   abstract createPagoRecord(
     data: CreatePagoRecordData,

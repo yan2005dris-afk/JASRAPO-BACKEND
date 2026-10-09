@@ -5,8 +5,13 @@ import { Test } from '@nestjs/testing';
 import { EstadoPago } from 'src/generated/prisma/enums';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from '../../application/payments.service';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
-import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import { SaldoFavorRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
@@ -25,7 +30,7 @@ describe('PaymentsController', () => {
     getDailyCashSummary: jest.fn(),
   };
 
-  const mockPayment = new PaymentEntity({
+  const mockPayment = paymentRow({
     pagoId: 1n,
     clienteId: 1n,
     cajaId: null,
@@ -46,7 +51,7 @@ describe('PaymentsController', () => {
     updatedAt: new Date('2026-06-18'),
   });
 
-  const mockSaldo = new SaldoFavorEntity({
+  const mockSaldo = saldoFavorRow({
     saldoFavorId: 1n,
     clienteId: 1n,
     pagoId: null,
@@ -164,7 +169,7 @@ describe('PaymentsController', () => {
   it('should call updateState with params and current user', async () => {
     const dto = { estadoPago: EstadoPago.REGISTRADO };
     service.updateState.mockResolvedValue(
-      new PaymentEntity({ ...mockPayment, estadoPago: EstadoPago.REGISTRADO }),
+      paymentRow({ ...mockPayment, estadoPago: EstadoPago.REGISTRADO }),
     );
 
     const result = await controller.updateState(1n, dto, {
@@ -178,7 +183,7 @@ describe('PaymentsController', () => {
   it('should call annul with params and current user', async () => {
     const dto = { motivoAnulacion: 'error en pago' };
     service.annul.mockResolvedValue(
-      new PaymentEntity({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
+      paymentRow({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
     );
 
     const result = await controller.annul(1n, dto, { email: 'admin@test.com' });

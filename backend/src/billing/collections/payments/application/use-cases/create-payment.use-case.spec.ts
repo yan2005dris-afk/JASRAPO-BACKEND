@@ -3,7 +3,12 @@ import { TipoDetallePago } from 'src/generated/prisma/enums';
 import { CreatePaymentUseCase } from './create-payment.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 import type { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('CreatePaymentUseCase', () => {
   let useCase: CreatePaymentUseCase;
@@ -26,7 +31,7 @@ describe('CreatePaymentUseCase', () => {
     createPending: jest.fn(),
   } as unknown as jest.Mocked<EventosPendientesRepository>;
 
-  const mockCreatedPayment = new PaymentEntity({
+  const mockCreatedPayment = paymentRow({
     pagoId: 10n,
     clienteId: 1n,
     montoTotalRecibido: 10,

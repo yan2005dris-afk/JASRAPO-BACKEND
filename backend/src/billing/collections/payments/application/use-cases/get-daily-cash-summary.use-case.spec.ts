@@ -1,7 +1,12 @@
 import { GetDailyCashSummaryUseCase } from './get-daily-cash-summary.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
-import { PaymentEntity } from '../../domain/entities/payment.entity';
-import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
+import { PaymentRow } from '../../domain/types/payment.types';
+import { PaymentDetailRow } from '../../domain/types/payment.types';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../../__test-utils__/payment-row.factory';
 
 describe('GetDailyCashSummaryUseCase', () => {
   let useCase: GetDailyCashSummaryUseCase;
@@ -17,17 +22,17 @@ describe('GetDailyCashSummaryUseCase', () => {
 
   it('should return daily cash summary with correct totals and breakdowns', async () => {
     paymentRepository.findDailyCashPayments.mockResolvedValue([
-      new PaymentEntity({
+      paymentRow({
         pagoId: 1n,
         montoTotalRecibido: 150,
         fechaPago: new Date('2026-06-18'),
         detallePago: [
-          new PaymentDetailEntity({
+          paymentDetailRow({
             tipoPago: 'EFECTIVO',
             montoAbonado: 100,
             comprobante: { comprobanteId: '1', tipoComprobante: 'FACTURA' },
           }),
-          new PaymentDetailEntity({
+          paymentDetailRow({
             tipoPago: 'TRANSFERENCIA',
             montoAbonado: 50,
             comprobante: { comprobanteId: '2', tipoComprobante: 'FACTURA' },
@@ -76,12 +81,12 @@ describe('GetDailyCashSummaryUseCase', () => {
 
   it('should default to SIN_COMPROBANTE when comprobante is missing', async () => {
     paymentRepository.findDailyCashPayments.mockResolvedValue([
-      new PaymentEntity({
+      paymentRow({
         pagoId: 2n,
         montoTotalRecibido: 30,
         fechaPago: new Date('2026-06-18'),
         detallePago: [
-          new PaymentDetailEntity({
+          paymentDetailRow({
             tipoPago: 'EFECTIVO',
             montoAbonado: 30,
             comprobante: null,

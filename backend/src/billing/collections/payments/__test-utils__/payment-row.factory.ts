@@ -8,7 +8,7 @@ import type {
 /**
  * Factory para construir filas `PaymentRow` tipadas en specs.
  *
- * Reemplaza al `new PaymentEntity(...)` (que era `Object.assign(this, partial)`)
+ * Reemplaza al `new PaymentRow(...)` (que era `Object.assign(this, partial)`)
  * en specs del BC billing/collections/payments. Cada override se pisa
  * sobre defaults sensatos. Si Prisma cambia la forma del modelo `Pagos`,
  * el factory lo detecta en compile-time.

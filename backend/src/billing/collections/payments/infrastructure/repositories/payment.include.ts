@@ -60,7 +60,7 @@ export const paymentInclude = {
 
 /**
  * Tipo de fila Prisma para Pago con el include por defecto. Reemplaza
- * al brand `PaymentEntity` (eliminado en #366 Nivel 2).
+ * al brand `PaymentRow` (eliminado en #366 Nivel 2).
  */
 export type PaymentRow = Prisma.PagosGetPayload<{
   include: typeof paymentInclude;
@@ -68,12 +68,12 @@ export type PaymentRow = Prisma.PagosGetPayload<{
 
 /**
  * Tipo derivado del campo `detallePago` del row Pago. Reemplaza al
- * brand `PaymentDetailEntity` (y su interface `ComprobantePaymentRef`).
+ * brand `PaymentDetailRow` (y su interface `ComprobantePaymentRef`).
  */
 export type PaymentDetailRow = PaymentRow['detallePago'][number];
 
 /**
  * Tipo derivado del campo `saldosFavor` del row Pago. Reemplaza al
- * brand `SaldoFavorEntity`.
+ * brand `SaldoFavorRow`.
  */
 export type SaldoFavorRow = PaymentRow['saldosFavor'][number];

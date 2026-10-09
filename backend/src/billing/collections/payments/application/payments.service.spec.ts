@@ -10,9 +10,14 @@ import { AnnulPaymentUseCase } from './use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './use-cases/apply-saldo-favor.use-case';
 import { GetDailyCashSummaryUseCase } from './use-cases/get-daily-cash-summary.use-case';
 import { PaymentRepository } from '../domain/repositories/payment.repository';
-import { PaymentEntity } from '../domain/entities/payment.entity';
-import { SaldoFavorEntity } from '../domain/entities/saldo-favor.entity';
+import type { PaymentRow } from '../domain/types/payment.types';
+import type { SaldoFavorRow } from '../domain/types/payment.types';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
+import {
+  paymentRow,
+  paymentDetailRow,
+  saldoFavorRow,
+} from '../__test-utils__/payment-row.factory';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -30,7 +35,7 @@ describe('PaymentsService', () => {
     findDailyCashPayments: jest.fn(),
   };
 
-  const mockPayment = new PaymentEntity({
+  const mockPayment = paymentRow({
     pagoId: 1n,
     clienteId: 1n,
     cajaId: null,
@@ -83,7 +88,7 @@ describe('PaymentsService', () => {
     });
   });
 
-  it('should delegate create and return PaymentEntity', async () => {
+  it('should delegate create and return PaymentRow', async () => {
     createUseCase.execute.mockResolvedValue(mockPayment);
 
     const result = await service.create(
@@ -148,7 +153,7 @@ describe('PaymentsService', () => {
   });
 
   it('should return available saldo favor for a client', async () => {
-    const mockSaldo = new SaldoFavorEntity({
+    const mockSaldo = saldoFavorRow({
       saldoFavorId: 1n,
       clienteId: 1n,
       pagoId: null,
