@@ -3,6 +3,7 @@ import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import { TerceraEdadService } from '../services/tercera-edad.service';
+import { DisabilityUtil } from '../../domain/disability.util';
 import type { CreateClientData } from '../../domain/types/client.types';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
@@ -127,6 +128,7 @@ export class CreateClientUseCase {
     dto: CreateClientDto,
     identificacion: string,
   ): Promise<CreateClientData> {
+    const hasDisability = dto.aplicaDiscapacidad ?? false;
     return {
       identificacion,
       tipoIdentificacionId: dto.tipoIdentificacionId,
@@ -140,7 +142,11 @@ export class CreateClientUseCase {
       aplicaTerceraEdad: await this.terceraEdadService.aplica(
         dto.fechaNacimiento,
       ),
-      aplicaDiscapacidad: dto.aplicaDiscapacidad ?? false,
+      aplicaDiscapacidad: hasDisability,
+      porcentajeDiscapacidad: DisabilityUtil.resolvePercentage(
+        hasDisability,
+        dto.porcentajeDiscapacidad,
+      ),
     };
   }
 }

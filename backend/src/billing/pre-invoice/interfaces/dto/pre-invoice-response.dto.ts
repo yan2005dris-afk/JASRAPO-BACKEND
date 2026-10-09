@@ -86,6 +86,13 @@ export class PreInvoiceResponseDto {
   @ApiProperty({ description: 'Total discount' })
   descuentoTotal: number;
 
+  @ApiProperty({
+    description:
+      'Subsidio Ley Tercera Edad / Discapacidad incluido en el descuento total',
+    example: 2,
+  })
+  subsidioLey: number;
+
   @ApiProperty({ description: 'Total to pay' })
   totalPagar: number;
 
@@ -152,6 +159,7 @@ export class PreInvoiceResponseDto {
     dto.subtotal = Number(entity.subtotal);
     dto.iva = Number(entity.iva);
     dto.descuentoTotal = Number(entity.descuentoTotal);
+    dto.subsidioLey = Number(entity.subsidioLey ?? 0);
     dto.totalPagar = Number(entity.totalPagar);
     dto.deudaAnterior = Number(entity.deudaAnterior);
     dto.saldoVencido = Number(entity.saldoVencido);

@@ -70,6 +70,7 @@ export class PrismaClientRepository implements ClientRepository {
           direccionDomicilio: data.direccionDomicilio,
           aplicaTerceraEdad: data.aplicaTerceraEdad,
           aplicaDiscapacidad: data.aplicaDiscapacidad,
+          porcentajeDiscapacidad: data.porcentajeDiscapacidad,
         },
         include: this.defaultInclude,
       });
@@ -113,6 +114,8 @@ export class PrismaClientRepository implements ClientRepository {
       updateData.aplicaTerceraEdad = data.aplicaTerceraEdad;
     if (data.aplicaDiscapacidad !== undefined)
       updateData.aplicaDiscapacidad = data.aplicaDiscapacidad;
+    if (data.porcentajeDiscapacidad !== undefined)
+      updateData.porcentajeDiscapacidad = data.porcentajeDiscapacidad;
     if (data.deletedAt !== undefined) updateData.deletedAt = data.deletedAt;
 
     try {

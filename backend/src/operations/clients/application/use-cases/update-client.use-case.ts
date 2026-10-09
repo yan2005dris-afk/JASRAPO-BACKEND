@@ -3,6 +3,7 @@ import { ClientRepository } from '../../domain/repositories/client.repository';
 import { UpdateClientDto } from '../../interfaces/dto/update-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import { TerceraEdadService } from '../services/tercera-edad.service';
+import { DisabilityUtil } from '../../domain/disability.util';
 import { ClientEntity } from '../../domain/entities/client.entity';
 import {
   EntityAlreadyExistsException,
@@ -73,6 +74,17 @@ export class UpdateClientUseCase {
         ? await this.terceraEdadService.aplica(dto.fechaNacimiento)
         : cliente.aplicaTerceraEdad;
 
+    const hasDisability = dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad;
+    const changesDisability =
+      dto.aplicaDiscapacidad !== undefined ||
+      dto.porcentajeDiscapacidad !== undefined;
+    const disabilityPercentage = changesDisability
+      ? DisabilityUtil.resolvePercentage(
+          hasDisability,
+          dto.porcentajeDiscapacidad ?? cliente.porcentajeDiscapacidad,
+        )
+      : cliente.porcentajeDiscapacidad;
+
     return this.clientRepository.updateClient(id, {
       tipoIdentificacionId: tipoId,
       identificacion: identificacionFinal,
@@ -84,7 +96,8 @@ export class UpdateClientUseCase {
       telefonoSecundario: dto.telefonoSecundario ?? cliente.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio ?? cliente.direccionDomicilio,
       aplicaTerceraEdad,
-      aplicaDiscapacidad: dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
+      aplicaDiscapacidad: hasDisability,
+      porcentajeDiscapacidad: disabilityPercentage,
     });
   }
 }

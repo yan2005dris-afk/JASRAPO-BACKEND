@@ -15,6 +15,11 @@ export class ClientMapper {
       direccionDomicilio: raw.direccionDomicilio,
       activo: raw.activo,
       aplicaDiscapacidad: raw.aplicaDiscapacidad,
+      porcentajeDiscapacidad:
+        raw.porcentajeDiscapacidad !== null &&
+        raw.porcentajeDiscapacidad !== undefined
+          ? Number(raw.porcentajeDiscapacidad)
+          : null,
       aplicaTerceraEdad: raw.aplicaTerceraEdad,
       tipoIdentificacion: raw.tipoIdentificacion
         ? {

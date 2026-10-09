@@ -21,6 +21,7 @@ export interface CreateClientData {
   direccionDomicilio?: string | null;
   aplicaTerceraEdad: boolean;
   aplicaDiscapacidad: boolean;
+  porcentajeDiscapacidad: number | null;
 }
 
 export type UpdateClientData = Partial<CreateClientData> & {

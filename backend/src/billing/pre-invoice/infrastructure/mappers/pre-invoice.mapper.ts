@@ -1,6 +1,7 @@
 import { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
 import { PreInvoiceDetailEntity } from '../../domain/entities/pre-invoice-detail.entity';
 import { Decimal } from 'decimal.js';
+import { SUBSIDY_DISCOUNT_TYPES } from '../../domain/constants/subsidy-discount-types';
 
 function toNumber(val: any): number {
   if (val === null || val === undefined) return 0;
@@ -12,6 +13,20 @@ function toNullableNumber(val: any): number | null {
   if (val === null || val === undefined) return null;
   if (val instanceof Decimal) return val.toNumber();
   return Number(val);
+}
+
+function sumSubsidies(details: any): number {
+  if (!Array.isArray(details)) return 0;
+  const total = details
+    .flatMap((detail) => detail.descuentoDetalles ?? [])
+    .filter((discount) =>
+      SUBSIDY_DISCOUNT_TYPES.includes(discount.catalogo?.tipoDescuento),
+    )
+    .reduce(
+      (sum, discount) => sum.plus(toNumber(discount.montoDescontado)),
+      new Decimal(0),
+    );
+  return total.toDecimalPlaces(2).toNumber();
 }
 
 export class PreInvoiceMapper {
@@ -51,6 +66,7 @@ export class PreInvoiceMapper {
       subtotal: toNumber(raw.subtotal),
       iva: toNumber(raw.iva),
       descuentoTotal: toNumber(raw.descuentoTotal),
+      subsidioLey: sumSubsidies(raw.prefacturaDetalle),
       totalPagar: toNumber(raw.totalPagar),
       deudaAnterior: toNumber(raw.deudaAnterior),
       saldoVencido: toNumber(raw.saldoVencido),

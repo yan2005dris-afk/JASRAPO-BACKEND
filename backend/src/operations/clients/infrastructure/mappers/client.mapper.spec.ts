@@ -1,5 +1,6 @@
 import { ClientMapper } from './client.mapper';
 import { ClientEntity } from '../../domain/entities/client.entity';
+import { Prisma } from 'src/generated/prisma/client';
 
 describe('ClientMapper', () => {
   describe('toDomain', () => {
@@ -49,12 +50,23 @@ describe('ClientMapper', () => {
       expect(result!.direccionDomicilio).toBe('Av. Siempre Viva 123');
       expect(result!.activo).toBe(true);
       expect(result!.aplicaDiscapacidad).toBe(false);
+      expect(result!.porcentajeDiscapacidad).toBeNull();
       expect(result!.aplicaTerceraEdad).toBe(false);
       expect(result!.tipoIdentificacion).toEqual({
         id: 1,
         codigo: '05',
         descripcion: 'CÉDULA',
       });
+    });
+
+    it('convierte el porcentaje del carné de Decimal a number', () => {
+      const result = ClientMapper.toDomain({
+        clienteId: BigInt(2),
+        aplicaDiscapacidad: true,
+        porcentajeDiscapacidad: new Prisma.Decimal('40.50'),
+      });
+
+      expect(result!.porcentajeDiscapacidad).toBe(40.5);
     });
 
     it('should map tipoIdentificacion as null when relation is absent', () => {
