@@ -16,12 +16,12 @@ import { Test } from '@nestjs/testing';
 import { BatchController } from './batch.controller';
 import { BatchService } from '../../application/batch.service';
 import { SendBatchEmailsUseCase } from '../../application/use-cases/send-batch-emails.use-case';
-import { BatchEntity } from '../../domain/entities/batch.entity';
+import { batchRow } from '../../__test-utils__/batch-row.factory';
 
 describe('BatchController', () => {
   let controller: BatchController;
 
-  const mockBatch = new BatchEntity({
+  const mockBatch = batchRow({
     loteId: BigInt(1),
     comunidadId: 1,
     periodoId: 1,

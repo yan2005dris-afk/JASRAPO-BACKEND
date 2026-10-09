@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import type { BatchEntity } from '../../domain/entities/batch.entity';
+import type { BatchRow } from '../../domain/types/batch.types';
 
 @Injectable()
 export class FindOneBatchUseCase {
   constructor(private readonly batchRepository: BatchRepository) {}
 
-  async execute(id: number): Promise<BatchEntity> {
+  async execute(id: number): Promise<BatchRow> {
     const batch = await this.batchRepository.findById(id);
 
     if (!batch) {

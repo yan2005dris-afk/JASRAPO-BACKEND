@@ -6,7 +6,7 @@ import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchUseCase } from './use-cases/generate-batch.use-case';
 import { FindAllBatchesUseCase } from './use-cases/find-all-batches.use-case';
 import { FindOneBatchUseCase } from './use-cases/find-one-batch.use-case';
-import type { BatchEntity } from '../domain/entities/batch.entity';
+import type { BatchRow } from '../domain/types/batch.types';
 import type {
   BatchFilters,
   GenerateBatchResult,
@@ -34,11 +34,11 @@ export class BatchService {
     page: number = 1,
     limit: number = 10,
     filters?: BatchFilters,
-  ): Promise<PaginatedResult<BatchEntity>> {
+  ): Promise<PaginatedResult<BatchRow>> {
     return this.findAllUseCase.execute(page, limit, filters);
   }
 
-  async findOne(id: number): Promise<BatchEntity> {
+  async findOne(id: number): Promise<BatchRow> {
     return this.findOneUseCase.execute(id);
   }
 
