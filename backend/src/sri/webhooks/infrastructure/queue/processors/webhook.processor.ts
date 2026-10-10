@@ -89,10 +89,7 @@ export class WebhookProcessor implements OnModuleInit {
           host,
           10,
           60000,
-          (err) =>
-            !!(
-              err as unknown as { isBusinessError?: unknown }
-            ).isBusinessError,
+          (err) => !!(err as { isBusinessError?: unknown }).isBusinessError,
         ),
       );
     }

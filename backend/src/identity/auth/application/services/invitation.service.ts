@@ -21,7 +21,8 @@ export type InvitationUser = {
 };
 
 @Injectable()
-export class InvitationService {  constructor(
+export class InvitationService {
+  constructor(
     private readonly prisma: PrismaService,
     private readonly tokenGenerator: InvitationTokenGeneratorService,
     private readonly mailService: MailService,

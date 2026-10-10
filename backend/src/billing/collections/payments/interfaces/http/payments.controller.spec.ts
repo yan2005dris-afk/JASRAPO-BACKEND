@@ -197,11 +197,7 @@ describe('PaymentsController', () => {
       paymentRow({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
     );
 
-    const result = await controller.annul(
-      1n,
-      dto,
-      mockUser('admin@test.com'),
-    );
+    const result = await controller.annul(1n, dto, mockUser('admin@test.com'));
 
     expect(result.estadoPago).toBe(EstadoPago.ANULADO);
     expect(service.annul).toHaveBeenCalledWith(1n, {
