@@ -205,33 +205,6 @@ export class ContratoMedidorController {
   }
 
   @ApiOperation({
-    summary: 'Finalizar vínculo',
-    description:
-      'Finaliza el vínculo activo entre contrato y medidor. Busca por ID de contrato.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del contrato',
-    type: Number,
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Vínculo finalizado',
-    type: ContractResponseDto,
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
-  @RequiredPermission('contracts', 'update')
-  @Post(':id/finalize')
-  async finalizarVinculo(
-    @Param('id', ParseBigIntPipe) id: bigint,
-  ): Promise<ContractResponseDto> {
-    const result = await this.contratoMedidorService.finalizarVinculo(id);
-    return ContractResponseDto.fromRow(result);
-  }
-
-  @ApiOperation({
     summary: 'Eliminar contrato',
     description: 'Elimina un contrato (soft delete)',
   })

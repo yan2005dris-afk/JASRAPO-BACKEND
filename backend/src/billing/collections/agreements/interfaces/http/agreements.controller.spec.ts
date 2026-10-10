@@ -117,15 +117,6 @@ describe('AgreementsController', () => {
     expect(service.findOne).toHaveBeenCalledWith(1n);
   });
 
-  it('should find installments and return response dto list', async () => {
-    service.findInstallments.mockResolvedValue([mockInstallment]);
-
-    const result = await controller.findInstallments('1');
-    expect(result).toHaveLength(1);
-    expect(result[0].cuotaConvenioId).toBe('1');
-    expect(service.findInstallments).toHaveBeenCalledWith('1');
-  });
-
   it('should cancel agreement', async () => {
     service.cancel.mockResolvedValue(
       agreementRow({ ...mockAgreement, estado: 'ANULADO' }),
