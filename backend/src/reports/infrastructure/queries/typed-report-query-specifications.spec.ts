@@ -312,12 +312,27 @@ async function queryOverdueAccounts() {
 }
 
 async function queryPaymentAgreement() {
-  const getPdfData = jest
-    .fn()
-    .mockResolvedValue(LEGACY_PAYMENT_AGREEMENT_FIXTURE);
+  const fixture = LEGACY_PAYMENT_AGREEMENT_FIXTURE.convenio;
+  const findFirst = jest.fn().mockResolvedValue({
+    convenioId: 1n,
+    contratoId: 10n,
+    deudaTotal: fixture.deudaTotal,
+    abonoInicial: fixture.abonoInicial,
+    numeroCuotas: fixture.numeroCuotas,
+    fechaPrimerPago: new Date(fixture.fechaPrimerPago),
+    motivo: fixture.motivo,
+    createdAt: new Date(fixture.createdAt),
+    contrato: {
+      numeroGuia: fixture.contrato.numeroGuia,
+      direccionSuministro: fixture.contrato.direccionSuministro,
+      fechaInicio: new Date(fixture.periodoInicio),
+      cliente: fixture.cliente,
+    },
+    cuotaConvenio: [{ valorCuota: fixture.cuotaMensual }],
+  });
   const adapter = new AgreementPaymentAgreementReportQueryAdapter({
-    getPdfData,
-  } as never);
+    convenios: { findFirst },
+  } as any);
   const context = contextFactory.create({
     reportType: 'payment-agreement',
     actor,
@@ -326,6 +341,10 @@ async function queryPaymentAgreement() {
 
   const result = await adapter.query(context);
 
-  expect(getPdfData).toHaveBeenCalledWith(1n);
+  expect(findFirst).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { convenioId: 1n, deletedAt: null },
+    }),
+  );
   return result;
 }

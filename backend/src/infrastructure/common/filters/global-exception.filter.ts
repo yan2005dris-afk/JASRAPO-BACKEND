@@ -19,6 +19,7 @@ import {
   InvalidDomainOperationException,
   UnauthorizedDomainException,
   ForbiddenDomainException,
+  GoneDomainException,
   DomainValidationException,
 } from '../../../shared/domain/exceptions/domain.exception';
 
@@ -104,6 +105,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status = HttpStatus.UNAUTHORIZED;
       } else if (exception instanceof ForbiddenDomainException) {
         status = HttpStatus.FORBIDDEN;
+      } else if (exception instanceof GoneDomainException) {
+        status = HttpStatus.GONE;
       } else if (exception instanceof DomainValidationException) {
         status = HttpStatus.BAD_REQUEST;
       } else if (exception instanceof InvalidDomainOperationException) {

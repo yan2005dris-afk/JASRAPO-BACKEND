@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { UpdateWorkOrderNoveltyUseCase } from './update-work-order-novelty.use-case';
 import { WORK_ORDER_NOVELTY_REPOSITORY } from '../../domain/repositories/work-order-novelty.repository';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
@@ -87,6 +88,6 @@ describe('UpdateWorkOrderNoveltyUseCase', () => {
     );
     await expect(
       useCase.execute(1n, { estado: EstadoNovedad.OPEN }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidDomainOperationException);
   });
 });

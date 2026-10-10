@@ -1,18 +1,21 @@
-import { GoneException, NotFoundException } from '@nestjs/common';
+import {
+  EntityNotFoundException,
+  GoneDomainException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
-export class InvitationNotFoundException extends NotFoundException {
+export class InvitationNotFoundException extends EntityNotFoundException {
   constructor() {
-    super('Invitación no encontrada o token inválido');
+    super('Invitación', 'token inválido o no encontrada');
   }
 }
 
-export class InvitationExpiredException extends GoneException {
+export class InvitationExpiredException extends GoneDomainException {
   constructor() {
     super('El token de invitación ha expirado');
   }
 }
 
-export class InvitationAlreadyUsedException extends GoneException {
+export class InvitationAlreadyUsedException extends GoneDomainException {
   constructor() {
     super('Esta invitación ya ha sido utilizada');
   }

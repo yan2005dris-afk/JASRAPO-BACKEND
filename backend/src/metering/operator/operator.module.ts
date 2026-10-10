@@ -11,12 +11,16 @@ import { PrismaOperatorRepository } from './infrastructure/repositories/prisma-o
 import { OperatorRepository } from './domain/repositories/operator.repository';
 import { MeterModule } from '../meters/meter.module';
 import { ReadingModule } from '../readings/reading.module';
-import { PrismaOrdenTrabajoRepository } from 'src/operations/routes/infrastructure/repositories/prisma-orden-trabajo.repository';
-import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositories/orden-trabajo.repository';
+import { RepositoriesModule } from 'src/operations/routes/repositories.module';
 import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/work-order-novelties.module';
 
 @Module({
-  imports: [MeterModule, ReadingModule, WorkOrderNoveltiesModule],
+  imports: [
+    MeterModule,
+    ReadingModule,
+    WorkOrderNoveltiesModule,
+    RepositoriesModule,
+  ],
   controllers: [OperatorController, OperatorNoveltiesController],
   providers: [
     UpdateOperatorWorkOrderUseCase,
@@ -28,10 +32,6 @@ import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/wo
     {
       provide: OperatorRepository,
       useClass: PrismaOperatorRepository,
-    },
-    {
-      provide: OrdenTrabajoRepository,
-      useClass: PrismaOrdenTrabajoRepository,
     },
   ],
 })
