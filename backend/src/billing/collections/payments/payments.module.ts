@@ -19,6 +19,12 @@ import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { OutboxModule } from 'src/shared/outbox/outbox.module';
 import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor';
 import { EmisionModule } from 'src/sri/emision/emision.module';
+import {
+  OUTBOX_EVENTO_TIPO,
+  parsePagoValidadoPayload,
+  parseCuotaPagadaPayload,
+  parsePagoAnuladoPayload,
+} from 'src/shared/domain/types/outbox-event.types';
 
 @Module({
   imports: [OutboxModule, EmisionModule],
@@ -53,22 +59,33 @@ export class PaymentsModule implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.outboxProcessor.registerHandler('pago.validado', async (evento) => {
-      const pagoId = BigInt(evento.payload['pagoId'] as string);
-      await this.pagoValidadoHandler.procesarPagoValidado(pagoId);
-    });
+    this.outboxProcessor.registerHandler(
+      OUTBOX_EVENTO_TIPO.PAGO_VALIDADO,
+      async (evento) => {
+        const { pagoId } = parsePagoValidadoPayload(evento.payload);
+        await this.pagoValidadoHandler.procesarPagoValidado(pagoId);
+      },
+    );
 
-    this.outboxProcessor.registerHandler('cuota.pagada', async (evento) => {
-      const cuotaConvenioId = BigInt(
-        evento.payload['cuotaConvenioId'] as string,
-      );
-      await this.cuotaPagadaHandler.procesarCuotaPagada(cuotaConvenioId);
-    });
+    this.outboxProcessor.registerHandler(
+      OUTBOX_EVENTO_TIPO.CUOTA_PAGADA,
+      async (evento) => {
+        const { cuotaConvenioId } = parseCuotaPagadaPayload(evento.payload);
+        await this.cuotaPagadaHandler.procesarCuotaPagada(cuotaConvenioId);
+      },
+    );
 
-    this.outboxProcessor.registerHandler('pago.anulado', async (evento) => {
-      const pagoId = BigInt(evento.payload['pagoId'] as string);
-      const motivo = (evento.payload['motivoAnulacion'] as string) || '';
-      await this.pagoAnuladoHandler.procesarPagoAnulado(pagoId, motivo);
-    });
+    this.outboxProcessor.registerHandler(
+      OUTBOX_EVENTO_TIPO.PAGO_ANULADO,
+      async (evento) => {
+        const { pagoId, motivoAnulacion } = parsePagoAnuladoPayload(
+          evento.payload,
+        );
+        await this.pagoAnuladoHandler.procesarPagoAnulado(
+          pagoId,
+          motivoAnulacion,
+        );
+      },
+    );
   }
 }
