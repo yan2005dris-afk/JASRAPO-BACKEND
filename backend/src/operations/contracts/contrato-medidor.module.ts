@@ -14,6 +14,8 @@ import { GetServiceAreaUseCase } from './application/use-cases/get-service-area.
 import { ContractRepository } from './domain/repositories/contract.repository';
 import { PrismaContractRepository } from './infrastructure/repositories/prisma-contract.repository';
 import { ContractGuideGeneratorService } from './infrastructure/services/contract-guide-generator.service';
+import { EnsureContractWorkOrderUseCase } from './application/use-cases/ensure-contract-work-order.use-case';
+import { CONTRACT_WORK_ORDER_PORT } from './application/ports/contract-work-order.port';
 import { ConnectionRequestPdfDocumentType } from './pdf/connection-request.pdf-type';
 import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agreement.pdf-type';
 import { RepositoriesModule } from '../routes/repositories.module';
@@ -34,6 +36,11 @@ import { RepositoriesModule } from '../routes/repositories.module';
     GetConnectionRequestPdfDataUseCase,
     GetResponsibilityAgreementPdfDataUseCase,
     GetServiceAreaUseCase,
+    EnsureContractWorkOrderUseCase,
+    {
+      provide: CONTRACT_WORK_ORDER_PORT,
+      useExisting: EnsureContractWorkOrderUseCase,
+    },
   ],
   exports: [
     ContractRepository,
@@ -44,6 +51,8 @@ import { RepositoriesModule } from '../routes/repositories.module';
     UpdateContractUseCase,
     RemoveContractUseCase,
     FinalizeMeterLinkUseCase,
+    EnsureContractWorkOrderUseCase,
+    CONTRACT_WORK_ORDER_PORT,
   ],
 })
 export class ContratoMedidorModule implements OnModuleInit {

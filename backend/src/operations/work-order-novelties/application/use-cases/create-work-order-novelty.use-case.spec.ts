@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateWorkOrderNoveltyUseCase } from './create-work-order-novelty.use-case';
 import { WORK_ORDER_NOVELTY_REPOSITORY } from '../../domain/repositories/work-order-novelty.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositories/orden-trabajo.repository';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { TipoAnomalia } from 'src/shared/enums';
@@ -13,18 +13,18 @@ import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 describe('CreateWorkOrderNoveltyUseCase', () => {
   let useCase: CreateWorkOrderNoveltyUseCase;
   let repoMock: any;
-  let prismaMock: any;
+  let ordenTrabajoRepoMock: any;
   let storageMock: { upload: jest.Mock; delete: jest.Mock };
 
   beforeEach(async () => {
     repoMock = { create: jest.fn() };
-    prismaMock = { ordenesTrabajo: { findUnique: jest.fn() } };
+    ordenTrabajoRepoMock = { findById: jest.fn() };
     storageMock = { upload: jest.fn(), delete: jest.fn() };
     const module = await Test.createTestingModule({
       providers: [
         CreateWorkOrderNoveltyUseCase,
         { provide: WORK_ORDER_NOVELTY_REPOSITORY, useValue: repoMock },
-        { provide: PrismaService, useValue: prismaMock },
+        { provide: OrdenTrabajoRepository, useValue: ordenTrabajoRepoMock },
         {
           provide: StorageService,
           useValue: storageMock,
@@ -43,7 +43,7 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('creates novelty with valid order and optional same-order reading context', async () => {
-    prismaMock.ordenesTrabajo.findUnique.mockResolvedValue({
+    ordenTrabajoRepoMock.findById.mockResolvedValue({
       ordenTrabajoId: 10n,
       lecturaId: 50n,
     });
@@ -68,14 +68,14 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
   });
 
   it('rejects creation if work order is missing', async () => {
-    prismaMock.ordenesTrabajo.findUnique.mockResolvedValueOnce(null);
+    ordenTrabajoRepoMock.findById.mockResolvedValueOnce(null);
     await expect(
       useCase.execute({ ordenTrabajoId: '999', tipo: TipoAnomalia.FUGA }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('rejects creation if reading context belongs to another order', async () => {
-    prismaMock.ordenesTrabajo.findUnique.mockResolvedValueOnce({
+    ordenTrabajoRepoMock.findById.mockResolvedValueOnce({
       ordenTrabajoId: 10n,
       lecturaId: 50n,
     });
@@ -89,7 +89,7 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
   });
 
   it('elimina la evidencia subida si falla la persistencia de la novedad', async () => {
-    prismaMock.ordenesTrabajo.findUnique.mockResolvedValue({
+    ordenTrabajoRepoMock.findById.mockResolvedValue({
       ordenTrabajoId: 10n,
       lecturaId: null,
     });

@@ -9,7 +9,7 @@ import {
   type WorkOrderNoveltyRepository,
 } from '../../domain/repositories/work-order-novelty.repository';
 import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositories/orden-trabajo.repository';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -34,7 +34,7 @@ export class CreateWorkOrderNoveltyUseCase {
   constructor(
     @Inject(WORK_ORDER_NOVELTY_REPOSITORY)
     private readonly repository: WorkOrderNoveltyRepository,
-    private readonly prisma: PrismaService,
+    private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
     private readonly storageService: StorageService,
     private readonly logger: LoggerService,
   ) {}
@@ -44,10 +44,7 @@ export class CreateWorkOrderNoveltyUseCase {
     file?: Express.Multer.File,
   ): Promise<WorkOrderNoveltyRow> {
     const ordenTrabajoId = BigInt(dto.ordenTrabajoId);
-    const order = await this.prisma.ordenesTrabajo.findUnique({
-      where: { ordenTrabajoId },
-      select: { ordenTrabajoId: true, lecturaId: true },
-    });
+    const order = await this.ordenTrabajoRepository.findById(ordenTrabajoId);
 
     if (!order) {
       throw new NotFoundException(

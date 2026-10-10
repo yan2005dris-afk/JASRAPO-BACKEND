@@ -1,9 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
-export class TarifaImpuestoNotFoundException extends NotFoundException {
+export class TarifaImpuestoNotFoundException extends EntityNotFoundException {
   constructor() {
     super(
-      'No hay tarifas de impuesto activas. Crea al menos una (CatalogoTarifasImpuesto) antes de crear una CategoriaTarifa.',
+      'CatalogoTarifasImpuesto',
+      'activa (Crea al menos una antes de crear una CategoriaTarifa)',
     );
   }
 }

@@ -1,5 +1,5 @@
 import { EstadoNovedad } from 'src/shared/enums';
-import { BadRequestException } from '@nestjs/common';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
 const ALLOWED_TRANSITIONS: Record<EstadoNovedad, readonly EstadoNovedad[]> = {
   [EstadoNovedad.OPEN]: [
@@ -23,7 +23,7 @@ export class NoveltyLifecyclePolicy {
     if (currentState === nextState) return;
     const allowed = ALLOWED_TRANSITIONS[currentState] ?? [];
     if (!allowed.includes(nextState)) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Transición de estado no permitida de ${currentState} a ${nextState}. Estados permitidos: [${allowed.join(', ')}]`,
       );
     }

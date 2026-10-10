@@ -62,6 +62,12 @@ export class ConflictDomainException extends DomainException {
  * incorrecto del body antes de llegar al use-case). El acoplamiento
  * que SC-188 busca eliminar es el de los use-cases al framework.
  */
+export class GoneDomainException extends DomainException {
+  constructor(message: string = 'Recurso ya no disponible') {
+    super(message);
+  }
+}
+
 export class DomainValidationException extends DomainException {
   readonly details?: Record<string, string[]>;
   constructor(message: string, details?: Record<string, string[]>) {

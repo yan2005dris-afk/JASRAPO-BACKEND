@@ -1,4 +1,4 @@
-import { ensureContractWorkOrder } from 'src/operations/contracts/infrastructure/contract-work-order';
+import { EnsureContractWorkOrderUseCase } from 'src/operations/contracts/application/use-cases/ensure-contract-work-order.use-case';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
@@ -531,7 +531,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
             estadoCobranza: 'NO_APLICA',
           },
         });
-        await ensureContractWorkOrder(
+        await new EnsureContractWorkOrderUseCase().ensureWorkOrder(
           tx,
           contract,
           link.medidorId,
