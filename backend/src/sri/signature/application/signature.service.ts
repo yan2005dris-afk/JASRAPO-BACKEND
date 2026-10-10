@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as forge from 'node-forge';
+import { parsePKCS12, X509Certificate } from 'node:crypto';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as QRCode from 'qrcode';
 import { SignPdf } from '@signpdf/signpdf';
@@ -37,6 +37,19 @@ export interface CertificateInfo {
     notAfter: Date;
   };
   serialNumber: string;
+}
+
+function parseDistinguishedName(dn: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const line of dn.split('\n')) {
+    const idx = line.indexOf('=');
+    if (idx !== -1) {
+      const key = line.slice(0, idx).trim();
+      const val = line.slice(idx + 1).trim();
+      result[key] = val;
+    }
+  }
+  return result;
 }
 
 @LogContext()
@@ -96,60 +109,50 @@ export class SignatureService {
   extractCertificateInfo(p12Buffer: Buffer, password: string): CertificateInfo {
     this.logger.log('Extrayendo información del certificado P12');
 
-    const p12Der = forge.util.createBuffer(p12Buffer.toString('binary'));
-    const p12Asn1 = forge.asn1.fromDer(p12Der);
-    const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+    const p12 = parsePKCS12(p12Buffer, { passphrase: password });
 
-    let privateKey: forge.pki.PrivateKey | null = null;
-    let signingCert: forge.pki.Certificate | null = null;
+    let signingCert: X509Certificate | null = null;
+    const allCerts: X509Certificate[] = [];
 
-    // Find private key and signing certificate
-    p12.safeContents.forEach((safeContent) => {
-      safeContent.safeBags.forEach((safeBag) => {
-        if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
-          privateKey = safeBag.key as forge.pki.PrivateKey;
-        } else if (safeBag.type === forge.pki.oids.certBag && safeBag.cert) {
-          if (!signingCert) {
-            signingCert = safeBag.cert;
-          } else {
-            const isCA =
-              safeBag.cert.extensions &&
-              safeBag.cert.extensions.some(
-                (ext: any) =>
-                  ext.name === 'basicConstraints' && ext.cA === true,
-              );
-            if (!isCA) {
-              signingCert = safeBag.cert;
-            }
-          }
-        }
-      });
-    });
+    if (p12.certificate) {
+      allCerts.push(p12.certificate);
+    }
+    if (p12.additionalCertificates) {
+      allCerts.push(...p12.additionalCertificates);
+    }
 
-    if (!privateKey || !signingCert) {
+    for (const cert of allCerts) {
+      if (!signingCert) {
+        signingCert = cert;
+      } else if (!cert.ca && signingCert.ca) {
+        signingCert = cert;
+      }
+    }
+
+    if (!p12.privateKey || !signingCert) {
       throw new Error(
         'No se pudo extraer la clave privada o el certificado del archivo P12',
       );
     }
 
-    const subject = (signingCert as forge.pki.Certificate).subject;
-    const issuer = (signingCert as forge.pki.Certificate).issuer;
+    const subject = parseDistinguishedName(signingCert.subject);
+    const issuer = parseDistinguishedName(signingCert.issuer);
 
     const certInfo: CertificateInfo = {
       subject: {
-        commonName: subject.getField('CN')?.value || 'No disponible',
-        organization: subject.getField('O')?.value || 'No disponible',
-        country: subject.getField('C')?.value || 'No disponible',
+        commonName: subject['CN'] || 'No disponible',
+        organization: subject['O'] || 'No disponible',
+        country: subject['C'] || 'No disponible',
       },
       issuer: {
-        commonName: issuer.getField('CN')?.value || 'No disponible',
-        organization: issuer.getField('O')?.value || 'No disponible',
+        commonName: issuer['CN'] || 'No disponible',
+        organization: issuer['O'] || 'No disponible',
       },
       validity: {
-        notBefore: (signingCert as forge.pki.Certificate).validity.notBefore,
-        notAfter: (signingCert as forge.pki.Certificate).validity.notAfter,
+        notBefore: new Date(signingCert.validFrom),
+        notAfter: new Date(signingCert.validTo),
       },
-      serialNumber: (signingCert as forge.pki.Certificate).serialNumber,
+      serialNumber: signingCert.serialNumber,
     };
 
     this.logger.log(

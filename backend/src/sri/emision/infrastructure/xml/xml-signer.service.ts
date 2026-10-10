@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as forge from 'node-forge';
+import { parsePKCS12, X509Certificate, createPrivateKey } from 'node:crypto';
 import { Crypto } from '@peculiar/webcrypto';
 import * as xadesjs from 'xadesjs';
 import * as xmlCore from 'xml-core';
@@ -117,55 +117,45 @@ export class XmlSignerService implements OnModuleInit {
     password: string,
   ): Promise<void> {
     this.logger.log('Procesando certificado P12 desde Buffer');
-    // ... (logic remains same for processing P12)
 
-    const p12Der = forge.util.createBuffer(p12Buffer.toString('binary'));
-    const p12Asn1 = forge.asn1.fromDer(p12Der);
-    const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+    const p12 = parsePKCS12(p12Buffer, { passphrase: password });
 
-    let forgePrivateKey: forge.pki.PrivateKey | null = null;
-    let signingCert: forge.pki.Certificate | null = null;
-    const chainCerts: forge.pki.Certificate[] = [];
+    let signingCert: X509Certificate | null = null;
+    const chainCerts: X509Certificate[] = [];
+    const allCerts: X509Certificate[] = [];
 
-    p12.safeContents.forEach((safeContent) => {
-      safeContent.safeBags.forEach((safeBag) => {
-        if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
-          forgePrivateKey = safeBag.key as forge.pki.PrivateKey;
-        } else if (safeBag.type === forge.pki.oids.certBag && safeBag.cert) {
-          const cert = safeBag.cert;
-          const isCA =
-            cert.extensions &&
-            cert.extensions.some(
-              (ext: { name: string; cA?: boolean }) =>
-                ext.name === 'basicConstraints' && ext.cA === true,
-            );
+    if (p12.certificate) {
+      allCerts.push(p12.certificate);
+    }
+    if (p12.additionalCertificates) {
+      allCerts.push(...p12.additionalCertificates);
+    }
 
-          if (!isCA) {
-            signingCert = cert;
-          } else {
-            chainCerts.push(cert);
-          }
-        }
-      });
-    });
+    for (const cert of allCerts) {
+      if (!signingCert) {
+        signingCert = cert;
+      } else if (!cert.ca && signingCert.ca) {
+        chainCerts.push(signingCert);
+        signingCert = cert;
+      } else {
+        chainCerts.push(cert);
+      }
+    }
 
-    if (!forgePrivateKey || !signingCert) {
+    if (!p12.privateKey || !signingCert) {
       throw new Error(
         'No se encontró clave privada o certificado en el archivo P12',
       );
     }
 
-    const privateKeyPem = forge.pki.privateKeyToPem(forgePrivateKey);
+    const privateKeyPem = p12.privateKey.export({
+      type: 'pkcs8',
+      format: 'pem',
+    }) as string;
     this.privateKey = await this.importPrivateKey(privateKeyPem);
-
-    this.certificate = forge.util.encode64(
-      forge.asn1.toDer(forge.pki.certificateToAsn1(signingCert)).getBytes(),
-    );
-
+    this.certificate = signingCert.raw.toString('base64');
     this.certificateChain = chainCerts.map((cert) =>
-      forge.util.encode64(
-        forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes(),
-      ),
+      cert.raw.toString('base64'),
     );
 
     this.logger.log('Certificado P12 cargado y procesado exitosamente');
@@ -292,10 +282,11 @@ export class XmlSignerService implements OnModuleInit {
     } catch {
       this.logger.log('Intentando conversión de PKCS#1 a PKCS#8');
 
-      const privateKey = forge.pki.privateKeyFromPem(pem);
-      const pkcs8Pem = forge.pki.privateKeyInfoToPem(
-        forge.pki.wrapRsaPrivateKey(forge.pki.privateKeyToAsn1(privateKey)),
-      );
+      const keyObject = createPrivateKey(pem);
+      const pkcs8Pem = keyObject.export({
+        type: 'pkcs8',
+        format: 'pem',
+      }) as string;
 
       const pkcs8Contents = pkcs8Pem
         .replace(/-----BEGIN PRIVATE KEY-----/, '')
@@ -395,45 +386,38 @@ export class XmlSignerService implements OnModuleInit {
     }
 
     // Process P12 certificate
-    const p12Der = forge.util.createBuffer(p12Buffer.toString('binary'));
-    const p12Asn1 = forge.asn1.fromDer(p12Der);
-    const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+    const p12 = parsePKCS12(p12Buffer, { passphrase: password });
 
-    let forgePrivateKey: forge.pki.PrivateKey | null = null;
-    let signingCert: forge.pki.Certificate | null = null;
+    let signingCert: X509Certificate | null = null;
+    const allCerts: X509Certificate[] = [];
 
-    p12.safeContents.forEach((safeContent) => {
-      safeContent.safeBags.forEach((safeBag) => {
-        if (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag) {
-          forgePrivateKey = safeBag.key as forge.pki.PrivateKey;
-        } else if (safeBag.type === forge.pki.oids.certBag && safeBag.cert) {
-          const cert = safeBag.cert;
-          const isCA =
-            cert.extensions &&
-            cert.extensions.some(
-              (ext: { name: string; cA?: boolean }) =>
-                ext.name === 'basicConstraints' && ext.cA === true,
-            );
+    if (p12.certificate) {
+      allCerts.push(p12.certificate);
+    }
+    if (p12.additionalCertificates) {
+      allCerts.push(...p12.additionalCertificates);
+    }
 
-          if (!isCA) {
-            signingCert = cert;
-          }
-        }
-      });
-    });
+    for (const cert of allCerts) {
+      if (!signingCert) {
+        signingCert = cert;
+      } else if (!cert.ca && signingCert.ca) {
+        signingCert = cert;
+      }
+    }
 
-    if (!forgePrivateKey || !signingCert) {
+    if (!p12.privateKey || !signingCert) {
       throw new Error(
         'No se encontró clave privada o certificado en el archivo P12',
       );
     }
 
-    const privateKeyPem = forge.pki.privateKeyToPem(forgePrivateKey);
+    const privateKeyPem = p12.privateKey.export({
+      type: 'pkcs8',
+      format: 'pem',
+    }) as string;
     const privateKey = await this.importPrivateKey(privateKeyPem);
-
-    const certificate = forge.util.encode64(
-      forge.asn1.toDer(forge.pki.certificateToAsn1(signingCert)).getBytes(),
-    );
+    const certificate = signingCert.raw.toString('base64');
 
     // Cache the result with timestamp (evicting oldest entry if at max capacity)
     if (
