@@ -62,6 +62,7 @@ model ReemplazoMedidor {
   @@index([prefacturaDetalleEntranteId])
   @@index([autorizadoPorUsuarioId])
   @@index([estadoAprobacion, periodoOrigenId, mesOrigen])
+  @@index([creadoPor])
   @@map("reemplazos_medidor")
 }
 
