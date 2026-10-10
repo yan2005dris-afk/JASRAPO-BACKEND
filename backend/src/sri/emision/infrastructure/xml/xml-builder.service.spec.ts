@@ -1,4 +1,4 @@
-import * as xml2js from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import { BadRequestException } from '@nestjs/common';
 import { XmlBuilderService } from './xml-builder.service';
 import {
@@ -28,12 +28,46 @@ const mockLogger = {
   verbose: jest.fn(),
 };
 
-async function parseXml(xml: string): Promise<any> {
-  const parser = new xml2js.Parser({
-    explicitArray: false,
-    ignoreAttrs: false,
-  });
-  return parser.parseStringPromise(xml);
+const xmlParser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: '@_',
+  textNodeName: '#text',
+  parseTagValue: false,
+});
+
+function parseXml(xml: string): any {
+  const parsed = xmlParser.parse(xml);
+  return adaptParsed(parsed);
+}
+
+function adaptParsed(node: any): any {
+  if (node === null || typeof node !== 'object') {
+    return node;
+  }
+  if (Array.isArray(node)) {
+    return node.map(adaptParsed);
+  }
+
+  const result: any = {};
+  const attrs: any = {};
+  let hasAttrs = false;
+
+  for (const [key, value] of Object.entries(node)) {
+    if (key.startsWith('@_')) {
+      attrs[key.slice(2)] = value;
+      hasAttrs = true;
+    } else if (key === '#text') {
+      result._ = value;
+    } else {
+      result[key] = adaptParsed(value);
+    }
+  }
+
+  if (hasAttrs) {
+    result.$ = attrs;
+  }
+
+  return result;
 }
 
 const baseInfoTributaria = (codDoc: string): InfoTributaria => ({
