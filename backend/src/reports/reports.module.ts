@@ -1,7 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { PdfService } from '../infrastructure/pdf/pdf.service';
 import { ClientModule } from '../operations/clients/client.module';
-import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
 import { ReportsController } from './interfaces/http/reports.controller';
 import { REPORT_PDF_DOCUMENT_TYPES } from './pdf/report-pdf-document-types';
 import { ReportStyleService } from './application/report-style.service';
@@ -44,12 +43,7 @@ import { InstitutionalProfileModule } from '../institutional-profile/institution
 import { ExportModule } from '../infrastructure/export/export.module';
 
 @Module({
-  imports: [
-    ClientModule,
-    AgreementsModule,
-    InstitutionalProfileModule,
-    ExportModule,
-  ],
+  imports: [ClientModule, InstitutionalProfileModule, ExportModule],
   controllers: [ReportsController],
   providers: [
     ClientsListReportDefinition,
