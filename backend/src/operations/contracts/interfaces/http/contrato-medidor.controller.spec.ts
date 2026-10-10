@@ -15,7 +15,6 @@ describe('ContratoMedidorController', () => {
     buscarContratos: jest.fn(),
     buscarContrato: jest.fn(),
     actualizar: jest.fn(),
-    finalizarVinculo: jest.fn(),
     eliminar: jest.fn(),
     generateConnectionRequestPdf: jest.fn(),
     generateResponsibilityAgreementPdf: jest.fn(),
@@ -148,14 +147,6 @@ describe('ContratoMedidorController', () => {
     const result = await controller.actualizarContrato(1n, {
       estadoServicio: 'ACTIVO',
     });
-
-    expect(result.contratoId).toBe(1n);
-  });
-
-  it('finalizarVinculo should return ContractResponseDto', async () => {
-    mockService.finalizarVinculo.mockResolvedValue(sampleContract);
-
-    const result = await controller.finalizarVinculo(1n);
 
     expect(result.contratoId).toBe(1n);
   });

@@ -217,35 +217,6 @@ export class AgreementsController {
   }
 
   /**
-   * GET /agreements/:id/installments
-   * Obtener cuotas de un convenio
-   */
-  @ApiOperation({
-    summary: 'Listar cuotas de un convenio',
-    description:
-      'Retorna la lista de cuotas pertenecientes a un convenio específico',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del convenio',
-    type: String,
-    example: '1',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de cuotas',
-    type: [InstallmentResponseDto],
-  })
-  @RequiredPermission('agreements', 'read')
-  @Get(':id/installments')
-  async findInstallments(
-    @Param('id') id: string,
-  ): Promise<InstallmentResponseDto[]> {
-    const cuotas = await this.agreementsService.findInstallments(id);
-    return InstallmentResponseDto.fromRowList(cuotas);
-  }
-
-  /**
    * DELETE /agreements/:id
    * Anular convenio (soft delete)
    */
