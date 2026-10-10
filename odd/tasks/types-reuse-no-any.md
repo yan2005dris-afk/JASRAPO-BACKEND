@@ -28,12 +28,13 @@ Fuera de alcance: `backend/src/generated/**` (Prisma, no tocar), `*.spec.ts` sal
 
 ## Checklist
 
-- [ ] **T1 — P0 paginación canónica**: `pagination.types.ts` como único dueño (`PaginationParams`, `PaginationMeta`, `PaginatedResult<K = Record<string, unknown>>`); eliminar `PaginationParams` duplicado de `pagination.util.ts`; importar el canónico; `PaginateOptions` documentado como alias de transición o eliminado si nadie lo usa.
-- [ ] **T2 — P0 decorator + DTOs**: `ApiPaginatedResponse <TModel extends Type<unknown>>`; verificar `PaginationMetaDto` vs `PaginationMeta` (documentar divergencia `page/limit` sin romper Swagger).
-- [ ] **T3 — P1 paginate + where**: `paginate<T>(model, args)` tipado sin `any`; `where: any` → `Prisma.<Model>WhereInput` en cash-sessions, operator, y resto de repos.
-- [ ] **T4 — P1 auth/user + controllers**: `@CurrentUser() user: any` → `AuthUser`; `fileFilter: (req: any, ..., callback: any)` → tipos Multer/Express; `@Res() res: any` donde aplique → `Response`.
-- [ ] **T5 — P1 casos chicos**: `catch (err: any)` → `unknown` + narrowing; `(d: any)` → tipo de fila Prisma/DTO; `createUserData: any`, `montoAbonado: any`, `raw: any` en mappers → tipos reales o `unknown` + guard. `JsonValue` de `shared/domain/types/json.ts` para payloads JSON.
-- [ ] **T6 — Verificación**: `pnpm --filter backend exec tsc --noEmit`, `pnpm --filter backend run lint`, tests afectados. Commits work-unit por T1..T5 en la rama. Sin push/PR sin autorización.
+- [x] **T1 — P0 paginación canónica**: `pagination.types.ts` como único dueño (`PaginationParams`, `PaginationOffset`, `PaginateOptions`, `PaginatedResult<T, K = unknown>`); `PaginationParams` duplicado de `pagination.util.ts` convertido en alias deprecated; `PaginateOptions` re-exportado; `paginate(model: unknown)` sin `any`.
+- [x] **T2 — P0 decorator + DTOs**: `ApiPaginatedResponse <TModel extends Type<unknown>>`; divergencia `PaginationMeta`/`PaginationMetaDto` documentada sin romper Swagger.
+- [x] **T3 — P1 paginate + where**: `paginate` sin `any`; `where: any` → `Prisma.*WhereInput` / `RouteFilters` (cash-sessions, operator x6, usuarios, routes).
+- [x] **T4 — P1 auth/user + controllers**: `@CurrentUser() user: any` → `JwtPayload` (+spec con `mockUser`); `fileFilter` y `@Res()` tipados.
+- [x] **T5 — P1 casos chicos**: `catch (err: any)` → `unknown` + narrowing; lambdas `(d: any)` con shapes locales; `createUserData`/`InvitationUser`/role-permission/`montoAbonado` tipados; `JsonValue`/`InputJsonValue` donde tocaba; `ColumnDefinition<T = unknown>`; mail `Job<SendMailOptions>`; webhook `WebHookJob` + circuit `(error: unknown)`.
+- [x] **T6 — Capas novelties**: `OperatorNoveltiesService` movido de Prisma directo al puerto `OperatorRepository` (include+Row+re-export, patrón #366 Nivel 2). Servicio sin `PrismaService`; spec rewireado al puerto.
+- [x] **T7 — Verificación**: `tsc --noEmit`, `eslint`, tests afectados. Commits work-unit en la rama. Sin push/PR sin autorización.
 
 ## Criterios de aceptación
 
@@ -43,5 +44,9 @@ Fuera de alcance: `backend/src/generated/**` (Prisma, no tocar), `*.spec.ts` sal
 
 ## Progreso y evidencia
 
-- 2026-10-10: rama `refactor/types-reuse-no-any` creada desde `develop` (49a30777). Baseline: 119 `any` en src no-generado no-spec.
-- Commits: (pendiente)
+- 2026-10-10: rama `refactor/types-reuse-no-any` creada desde `develop` (49a30777). Baseline: 119 `any` en src no-generado no-spec; tsc 165 errores pre-existentes (specs con drift de schema, Decimal, etc.).
+- 2026-10-10: `5dd95de` P0 paginación (tsc 165==165, pagination.util.spec 14/14).
+- 2026-10-10: `fbbf8e7` P1 any de alto valor (tsc 165→161, 4 specs `{email}` corregidos; suites tocadas 79/79 verde).
+- 2026-10-10: `df29b1a` novelties a repo infra (tsc 161==161; operator 12 suites/71 tests verde).
+- `any` restantes en src no-generado no-spec: 78 (de 119). Quedan: `tx: any` documentado (SC-187), `reading.mapper raw: any` (mapper defensivo, P2), validators PipeTransform/class-validator (contrato externo exige `any`), soft-delete middleware (glue de Prisma), specs con mocks `any` (~40, chore aparte).
+- `unknown` en src: uso correcto (catch, `as unknown as`, narrowing). No se toca.
