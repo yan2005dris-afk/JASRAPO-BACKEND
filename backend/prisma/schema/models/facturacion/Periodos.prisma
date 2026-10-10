@@ -17,6 +17,7 @@ model Periodos {
   reemplazosOrigen   ReemplazoMedidor[] @relation("ReemplazoPeriodoOrigen")
   reemplazosDestino  ReemplazoMedidor[] @relation("ReemplazoPeriodoDestino")
 
+  @@index([creadoPor])
   @@map("periodos")
 }
 
