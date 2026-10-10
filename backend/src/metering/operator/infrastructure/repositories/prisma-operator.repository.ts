@@ -31,6 +31,11 @@ import type {
   SyncPage,
   SyncChangePage,
 } from '../../domain/repositories/repository-types';
+import type {
+  OperatorNoveltyFilters,
+  OperatorNoveltyRow,
+} from '../../domain/types/operator-novelty.types';
+import { operatorNoveltyInclude } from './operator-novelty.include';
 
 const routeOperarioSelect = {
   usuarioId: true,
@@ -844,6 +849,49 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
 
     return this.prisma.usuarios.findMany({ where });
+  }
+
+  async findOperatorNovelties(params: {
+    operarioId: number;
+    page: number;
+    limit: number;
+    filters?: OperatorNoveltyFilters;
+  }): Promise<{ data: OperatorNoveltyRow[]; total: number }> {
+    const { operarioId, page, limit, filters } = params;
+    const where: Prisma.NovedadOrdenTrabajoWhereInput = {
+      deletedAt: null,
+      ordenTrabajo: { ruta: { operarioId } },
+      ...(filters?.lecturaId ? { lecturaId: filters.lecturaId } : {}),
+      ...(filters?.ordenTrabajoId
+        ? { ordenTrabajoId: filters.ordenTrabajoId }
+        : {}),
+      ...(filters?.estado ? { estado: filters.estado as EstadoNovedad } : {}),
+    };
+    const [data, total] = await Promise.all([
+      this.prisma.novedadOrdenTrabajo.findMany({
+        where,
+        include: operatorNoveltyInclude,
+        orderBy: [{ createdAt: 'desc' }, { novedadId: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.novedadOrdenTrabajo.count({ where }),
+    ]);
+    return { data, total };
+  }
+
+  async findOperatorNovelty(
+    operarioId: number,
+    novedadId: bigint,
+  ): Promise<OperatorNoveltyRow | null> {
+    return this.prisma.novedadOrdenTrabajo.findFirst({
+      where: {
+        deletedAt: null,
+        ordenTrabajo: { ruta: { operarioId } },
+        novedadId,
+      },
+      include: operatorNoveltyInclude,
+    });
   }
 
   async findMeterContractLocation(medidorId: bigint): Promise<{

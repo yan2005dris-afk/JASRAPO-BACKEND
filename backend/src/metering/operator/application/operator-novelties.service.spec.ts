@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { OperatorNoveltiesService } from './operator-novelties.service';
-import type { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { OperatorRepository } from '../domain/repositories/operator.repository';
 import type { WorkOrderNoveltyService } from 'src/operations/work-order-novelties/application/work-order-novelty.service';
 
 describe('OperatorNoveltiesService', () => {
@@ -29,12 +29,9 @@ describe('OperatorNoveltiesService', () => {
       },
     },
   };
-  const prisma = {
-    novedadOrdenTrabajo: {
-      findMany: jest.fn(),
-      count: jest.fn(),
-      findFirst: jest.fn(),
-    },
+  const repository = {
+    findOperatorNovelties: jest.fn(),
+    findOperatorNovelty: jest.fn(),
   };
   const novelties = { update: jest.fn() };
   let service: OperatorNoveltiesService;
@@ -42,20 +39,23 @@ describe('OperatorNoveltiesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new OperatorNoveltiesService(
-      prisma as unknown as PrismaService,
+      repository as unknown as OperatorRepository,
       novelties as unknown as WorkOrderNoveltyService,
     );
   });
 
   it('lists assigned order novelties including those without a reading', async () => {
-    prisma.novedadOrdenTrabajo.findMany.mockResolvedValue([row]);
-    prisma.novedadOrdenTrabajo.count.mockResolvedValue(1);
+    repository.findOperatorNovelties.mockResolvedValue({
+      data: [row],
+      total: 1,
+    });
     const result = await service.list(9);
-    expect(prisma.novedadOrdenTrabajo.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { deletedAt: null, ordenTrabajo: { ruta: { operarioId: 9 } } },
-      }),
-    );
+    expect(repository.findOperatorNovelties).toHaveBeenCalledWith({
+      operarioId: 9,
+      page: 1,
+      limit: 100,
+      filters: undefined,
+    });
     expect(result.data[0]).toEqual(
       expect.objectContaining({
         novedadId: '12',
@@ -68,17 +68,9 @@ describe('OperatorNoveltiesService', () => {
   });
 
   it('denies access to a novelty outside the operator routes', async () => {
-    prisma.novedadOrdenTrabajo.findFirst.mockResolvedValue(null);
+    repository.findOperatorNovelty.mockResolvedValue(null);
     await expect(service.findOne(9, 12n)).rejects.toThrow(NotFoundException);
-    expect(prisma.novedadOrdenTrabajo.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          deletedAt: null,
-          ordenTrabajo: { ruta: { operarioId: 9 } },
-          novedadId: 12n,
-        },
-      }),
-    );
+    expect(repository.findOperatorNovelty).toHaveBeenCalledWith(9, 12n);
     await expect(
       service.update(9, 12n, { observacion: 'Cambio' }),
     ).rejects.toThrow(NotFoundException);
@@ -86,7 +78,7 @@ describe('OperatorNoveltiesService', () => {
   });
 
   it('updates the original novelty only after checking assignment', async () => {
-    prisma.novedadOrdenTrabajo.findFirst.mockResolvedValue(row);
+    repository.findOperatorNovelty.mockResolvedValue(row);
     novelties.update.mockResolvedValue(row);
     const result = await service.update(9, 12n, {
       observacion: 'Cambio real',
