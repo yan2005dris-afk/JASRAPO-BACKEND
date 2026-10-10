@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as xml2js from 'xml2js';
+import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import type {
   Factura,
   InfoTributaria,
@@ -26,18 +26,28 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Servicio para construir documentos XML de comprobantes electrónicos
- * según los esquemas XSD del SRI Ecuador.
+ * según los esquemas XSD del SRI Ecuador utilizando fast-xml-parser.
  */
 @LogContext()
 @Injectable()
 export class XmlBuilderService {
-  private readonly builder: xml2js.Builder;
+  private readonly builder: XMLBuilder;
+  private readonly parser: XMLParser;
 
   constructor(private readonly logger: LoggerService) {
-    this.builder = new xml2js.Builder({
-      xmldec: { version: '1.0', encoding: 'UTF-8' },
-      renderOpts: { pretty: true, indent: '  ' },
-      headless: false,
+    this.builder = new XMLBuilder({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      format: true,
+      indentBy: '  ',
+      suppressEmptyNode: false,
+    });
+
+    this.parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      textNodeName: '#text',
+      parseTagValue: false,
     });
   }
 
@@ -49,10 +59,8 @@ export class XmlBuilderService {
 
     const xmlObj = {
       factura: {
-        $: {
-          id: 'comprobante',
-          version: FACTURA_VERSION,
-        },
+        '@_id': 'comprobante',
+        '@_version': FACTURA_VERSION,
         infoTributaria: this.buildInfoTributaria(factura.infoTributaria),
         infoFactura: this.buildInfoFactura(factura.infoFactura),
         detalles: {
@@ -75,13 +83,14 @@ export class XmlBuilderService {
     if (factura.infoAdicional && factura.infoAdicional.length > 0) {
       (xmlObj.factura as any).infoAdicional = {
         campoAdicional: factura.infoAdicional.map((campo) => ({
-          $: { nombre: campo.nombre },
-          _: campo.valor,
+          '@_nombre': campo.nombre,
+          '#text': campo.valor,
         })),
       };
     }
 
-    const xml = this.builder.buildObject(xmlObj);
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' + this.builder.build(xmlObj);
     this.logger.log('XML de factura construido exitosamente');
     return xml;
   }
@@ -208,7 +217,8 @@ export class XmlBuilderService {
     if (detalle.detallesAdicionales && detalle.detallesAdicionales.length > 0) {
       result.detallesAdicionales = {
         detAdicional: detalle.detallesAdicionales.map((d) => ({
-          $: { nombre: d.nombre, valor: d.valor },
+          '@_nombre': d.nombre,
+          '@_valor': d.valor,
         })),
       };
     }
@@ -238,10 +248,8 @@ export class XmlBuilderService {
 
     const xmlObj = {
       notaCredito: {
-        $: {
-          id: 'comprobante',
-          version: NOTA_CREDITO_VERSION,
-        },
+        '@_id': 'comprobante',
+        '@_version': NOTA_CREDITO_VERSION,
         infoTributaria: this.buildInfoTributaria(notaCredito.infoTributaria),
         infoNotaCredito: this.buildInfoNotaCredito(notaCredito.infoNotaCredito),
         detalles: {
@@ -255,13 +263,14 @@ export class XmlBuilderService {
     if (notaCredito.infoAdicional && notaCredito.infoAdicional.length > 0) {
       (xmlObj.notaCredito as any).infoAdicional = {
         campoAdicional: notaCredito.infoAdicional.map((campo) => ({
-          $: { nombre: campo.nombre },
-          _: campo.valor,
+          '@_nombre': campo.nombre,
+          '#text': campo.valor,
         })),
       };
     }
 
-    const xml = this.builder.buildObject(xmlObj);
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' + this.builder.build(xmlObj);
     this.logger.log('XML de nota de crédito construido exitosamente');
     return xml;
   }
@@ -336,7 +345,8 @@ export class XmlBuilderService {
     if (detalle.detallesAdicionales && detalle.detallesAdicionales.length > 0) {
       result.detallesAdicionales = {
         detAdicional: detalle.detallesAdicionales.map((d) => ({
-          $: { nombre: d.nombre, valor: d.valor },
+          '@_nombre': d.nombre,
+          '@_valor': d.valor,
         })),
       };
     }
@@ -362,10 +372,8 @@ export class XmlBuilderService {
 
     const xmlObj = {
       notaDebito: {
-        $: {
-          id: 'comprobante',
-          version: NOTA_DEBITO_VERSION,
-        },
+        '@_id': 'comprobante',
+        '@_version': NOTA_DEBITO_VERSION,
         infoTributaria: this.buildInfoTributaria(notaDebito.infoTributaria),
         infoNotaDebito: this.buildInfoNotaDebito(notaDebito.infoNotaDebito),
         motivos: {
@@ -377,13 +385,14 @@ export class XmlBuilderService {
     if (notaDebito.infoAdicional && notaDebito.infoAdicional.length > 0) {
       (xmlObj.notaDebito as any).infoAdicional = {
         campoAdicional: notaDebito.infoAdicional.map((campo) => ({
-          $: { nombre: campo.nombre },
-          _: campo.valor,
+          '@_nombre': campo.nombre,
+          '#text': campo.valor,
         })),
       };
     }
 
-    const xml = this.builder.buildObject(xmlObj);
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' + this.builder.build(xmlObj);
     this.logger.log('XML de nota de débito construido exitosamente');
     return xml;
   }
@@ -507,10 +516,8 @@ export class XmlBuilderService {
 
     const xmlObj = {
       comprobanteRetencion: {
-        $: {
-          id: 'comprobante',
-          version: RETENCION_VERSION,
-        },
+        '@_id': 'comprobante',
+        '@_version': RETENCION_VERSION,
         infoTributaria: this.buildInfoTributaria(retencion.infoTributaria),
         infoCompRetencion: this.buildInfoRetencion(retencion.infoCompRetencion),
         docsSustento: {
@@ -522,13 +529,14 @@ export class XmlBuilderService {
     if (retencion.infoAdicional && retencion.infoAdicional.length > 0) {
       (xmlObj.comprobanteRetencion as any).infoAdicional = {
         campoAdicional: retencion.infoAdicional.map((campo) => ({
-          $: { nombre: campo.nombre },
-          _: campo.valor,
+          '@_nombre': campo.nombre,
+          '#text': campo.valor,
         })),
       };
     }
 
-    const xml = this.builder.buildObject(xmlObj);
+    const xml =
+      '<?xml version="1.0" encoding="UTF-8"?>\n' + this.builder.build(xmlObj);
     this.logger.log('XML de comprobante de retención construido exitosamente');
     return xml;
   }
@@ -585,10 +593,6 @@ export class XmlBuilderService {
   }
 
   async parseXml<T>(xml: string): Promise<T> {
-    const parser = new xml2js.Parser({
-      explicitArray: false,
-      ignoreAttrs: false,
-    });
-    return parser.parseStringPromise(xml);
+    return this.parser.parse(xml) as T;
   }
 }

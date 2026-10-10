@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import { SimpleCircuitBreaker } from '../../../../infrastructure/common/resilience/circuit-breaker';
 import type {
   SriRecepcionResponse,
@@ -20,6 +20,12 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @Injectable()
 export class SriSoapClient {
   private readonly breakers = new Map<string, SimpleCircuitBreaker>();
+  private readonly xmlParser = new XMLParser({
+    ignoreAttributes: true,
+    removeNSPrefix: true,
+    parseTagValue: false,
+    trimValues: true,
+  });
 
   private readonly SRI_URLS = {
     recepcion: {
@@ -78,17 +84,12 @@ export class SriSoapClient {
         return await this.sendSoapRequest(endpoint, soapEnvelope);
       });
 
-      const parsed = await parseStringPromise(responseXml, {
-        explicitArray: false,
-        ignoreAttrs: true,
-      });
+      const parsed = this.xmlParser.parse(responseXml);
 
       const root =
-        parsed?.['soap:Envelope']?.['soap:Body']?.[
-          'ns2:validarComprobanteResponse'
-        ]?.RespuestaRecepcionComprobante ||
-        parsed?.['soap:Envelope']?.['soap:Body']?.validarComprobanteResponse
+        parsed?.Envelope?.Body?.validarComprobanteResponse
           ?.RespuestaRecepcionComprobante ||
+        parsed?.validarComprobanteResponse?.RespuestaRecepcionComprobante ||
         parsed?.RespuestaRecepcionComprobante ||
         {};
 
@@ -141,17 +142,13 @@ export class SriSoapClient {
         return await this.sendSoapRequest(endpoint, soapEnvelope);
       });
 
-      const parsed = await parseStringPromise(responseXml, {
-        explicitArray: false,
-        ignoreAttrs: true,
-      });
+      const parsed = this.xmlParser.parse(responseXml);
 
       const root =
-        parsed?.['soap:Envelope']?.['soap:Body']?.[
-          'ns2:autorizacionComprobanteResponse'
-        ]?.RespuestaAutorizacionComprobante ||
-        parsed?.['soap:Envelope']?.['soap:Body']
-          ?.autorizacionComprobanteResponse?.RespuestaAutorizacionComprobante ||
+        parsed?.Envelope?.Body?.autorizacionComprobanteResponse
+          ?.RespuestaAutorizacionComprobante ||
+        parsed?.autorizacionComprobanteResponse
+          ?.RespuestaAutorizacionComprobante ||
         parsed?.RespuestaAutorizacionComprobante ||
         {};
 
@@ -281,15 +278,17 @@ export class SriSoapClient {
       if (!response.ok) {
         // Verificar si es un SOAP Fault
         if (responseText.includes('Fault')) {
-          const parsed = await parseStringPromise(responseText, {
-            explicitArray: false,
-            ignoreAttrs: true,
-          }).catch(() => null);
-          const fault =
-            parsed?.['soap:Envelope']?.['soap:Body']?.['soap:Fault'] ||
-            parsed?.['soap:Envelope']?.['soap:Body']?.Fault;
-          const faultString = fault?.faultstring || response.statusText;
-          throw new Error(`SRI SOAP Fault: ${faultString}`);
+          let faultString: string | undefined;
+          try {
+            const parsed = this.xmlParser.parse(responseText);
+            const fault = parsed?.Envelope?.Body?.Fault || parsed?.Fault;
+            faultString = fault?.faultstring || fault?.reason;
+          } catch {
+            // Ignore parse error and fallback to statusText
+          }
+          throw new Error(
+            `SRI SOAP Fault: ${faultString || response.statusText}`,
+          );
         }
         throw new Error(
           `Error en comunicación con el SRI (HTTP ${response.status}): ${response.statusText}`,
