@@ -235,4 +235,76 @@ describe('CreatePaymentUseCase', () => {
       tx,
     );
   });
+
+  it('should reject payment when detail amount exceeds comprobante remaining balance', async () => {
+    repository.clientExists.mockResolvedValue(true);
+    repository.isCajaOpen.mockResolvedValue(true);
+    repository.executeTransaction.mockImplementation(async (cb: any) => {
+      const tx = Symbol('tx') as any;
+      repository.lockComprobante.mockResolvedValue(undefined);
+      repository.findComprobanteById.mockResolvedValue({
+        comprobanteId: 100n,
+        importeTotal: 50,
+      } as any);
+      // Already paid 40
+      repository.findComprobanteAppliedSum.mockResolvedValue(40);
+      return cb(tx);
+    });
+
+    // Trying to pay 20 when only 10 is remaining
+    await expect(
+      useCase.execute({
+        clienteId: '1',
+        fechaPago: '2026-06-18',
+        montoTotalRecibido: 20,
+        detalle: [
+          {
+            tipoPago: TipoDetallePago.COMPROBANTE,
+            comprobanteId: '100',
+            montoAbonado: 20,
+            formaPagoId: 1,
+          },
+        ],
+      }),
+    ).rejects.toThrow('El monto excede el saldo pendiente del comprobante 100');
+  });
+
+  it('should create saldo a favor when payment detail includes SALDO_FAVOR', async () => {
+    const tx = Symbol('tx') as any;
+    repository.clientExists.mockResolvedValue(true);
+    repository.isCajaOpen.mockResolvedValue(true);
+    repository.executeTransaction.mockImplementation(async (cb: any) => {
+      repository.createPagoRecord.mockResolvedValue({ pagoId: 25n });
+      repository.createDetallesPago.mockResolvedValue(undefined);
+      repository.createSaldoFavorRecord.mockResolvedValue(
+        saldoFavorRow({ saldoFavorId: 1n, montoSaldo: 15 }),
+      );
+      return cb(tx);
+    });
+    repository.findById.mockResolvedValue(mockCreatedPayment);
+
+    await useCase.execute({
+      clienteId: '1',
+      fechaPago: '2026-06-18',
+      montoTotalRecibido: 15,
+      detalle: [
+        {
+          tipoPago: TipoDetallePago.SALDO_FAVOR,
+          montoAbonado: 15,
+          formaPagoId: 1,
+        },
+      ],
+    });
+
+    expect(repository.createSaldoFavorRecord).toHaveBeenCalledWith(
+      {
+        clienteId: 1n,
+        pagoId: 25n,
+        montoSaldo: 15,
+        tipoOrigen: 'PAGO_EXCESO',
+        disponibleParaAplicar: true,
+      },
+      tx,
+    );
+  });
 });
