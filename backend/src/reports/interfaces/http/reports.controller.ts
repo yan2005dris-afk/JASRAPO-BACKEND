@@ -20,7 +20,7 @@ import {
 import type { Response } from 'express';
 import type { JwtPayload } from '../../../identity/auth/application/types/jwt.types';
 import { CurrentUser } from '../../../identity/auth/interfaces/http/decorators/current-user.decorator';
-import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { ClientsListReportFilterDto } from '../dto/clients-list-report-filter.dto';
 import { PaymentsReportFilterDto } from '../dto/payments-report-filter.dto';
 import { ConnectionHistoryFilterDto } from '../dto/connection-history-filter.dto';

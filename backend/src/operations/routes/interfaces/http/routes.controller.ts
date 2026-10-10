@@ -10,7 +10,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -19,7 +19,7 @@ import {
   ApiParam,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { RoutesService } from '../../application/routes.service';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';

@@ -15,7 +15,7 @@ import {
   RoleResponseDto,
   RoleDetailResponseDto,
 } from '../dto/role-response.dto';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
   ApiTags,

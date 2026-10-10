@@ -14,18 +14,18 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
-import { SistemaConfigRepository } from '../../../src/infrastructure/config/sistema-config.repository';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { SistemaConfigRepository } from 'src/infrastructure/config/sistema-config.repository';
 import {
   SistemaConfigService,
   __resetSistemaConfigCache,
-} from '../../../src/infrastructure/config/sistema-config.service';
-import { CLIENTES_TERCERA_EDAD_EDAD_MINIMA } from '../../../src/infrastructure/config/sistema-config.keys';
-import { TerceraEdadService } from '../../../src/operations/clients/application/services/tercera-edad.service';
-import { CreateClientUseCase } from '../../../src/operations/clients/application/use-cases/create-client.use-case';
-import { UpdateClientUseCase } from '../../../src/operations/clients/application/use-cases/update-client.use-case';
-import { PrismaClientRepository } from '../../../src/operations/clients/infrastructure/repositories/prisma-client.repository';
-import type { LoggerService } from '../../../src/infrastructure/observability/logger/logger.service';
+} from 'src/infrastructure/config/sistema-config.service';
+import { CLIENTES_TERCERA_EDAD_EDAD_MINIMA } from 'src/infrastructure/config/sistema-config.keys';
+import { TerceraEdadService } from 'src/operations/clients/application/services/tercera-edad.service';
+import { CreateClientUseCase } from 'src/operations/clients/application/use-cases/create-client.use-case';
+import { UpdateClientUseCase } from 'src/operations/clients/application/use-cases/update-client.use-case';
+import { PrismaClientRepository } from 'src/operations/clients/infrastructure/repositories/prisma-client.repository';
+import type { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { seedTerceraEdadConfig } from '../../../prisma/schema/seeds/terceraEdadConfig.seed';
 
 void describe(

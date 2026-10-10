@@ -1,9 +1,5 @@
 import { resolve } from 'path';
-import {
-  requireEnv,
-  resolveDir,
-  ensureDir,
-} from '../../../../infrastructure/common/utils/env.utils';
+import { requireEnv, resolveDir, ensureDir } from 'src/shared/utils/env.utils';
 
 /**
  * Local filesystem storage paths (deprecated in favor of S3-compatible storage)
@@ -63,4 +59,4 @@ export const STORAGE_PATHS = {
 };
 
 // Generic filename utilities (sanitizeFilename, generateUniqueFilename)
-// have been moved to src/infrastructure/common/utils/file.utils.ts
+// have been moved to src/shared/utils/file.utils.ts

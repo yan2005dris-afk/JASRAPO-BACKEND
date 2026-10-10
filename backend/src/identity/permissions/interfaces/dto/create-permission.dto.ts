@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { MaxLength } from 'class-validator';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 export class CreatePermissionDto {
   @ApiProperty({ example: 'Gestión de usuarios' })

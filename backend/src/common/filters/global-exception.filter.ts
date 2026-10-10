@@ -10,7 +10,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
-import { LoggerService } from '../../../infrastructure/observability/logger/logger.service';
+import { LoggerService } from '../../infrastructure/observability/logger/logger.service';
 import {
   ConflictDomainException,
   DomainException,
@@ -21,7 +21,7 @@ import {
   ForbiddenDomainException,
   GoneDomainException,
   DomainValidationException,
-} from '../../../shared/domain/exceptions/domain.exception';
+} from '../../shared/domain/exceptions/domain.exception';
 
 interface FormattedValidationError {
   field: string;

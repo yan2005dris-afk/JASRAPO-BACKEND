@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength, Matches } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
-import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
+import { IsValidDateRange } from 'src/common/decorators/is-valid-date-range.decorator';
 import { BaseReportFilterDto } from './base-report-filter.dto';
 
 export class AccountStatementFilterDto extends BaseReportFilterDto {

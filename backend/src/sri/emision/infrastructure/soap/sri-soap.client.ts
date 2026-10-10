@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { XMLParser } from 'fast-xml-parser';
-import { SimpleCircuitBreaker } from '../../../../infrastructure/common/resilience/circuit-breaker';
+import { SimpleCircuitBreaker } from 'src/shared/resilience/circuit-breaker';
 import type {
   SriRecepcionResponse,
   SriAutorizacionResponse,
@@ -45,7 +45,7 @@ export class SriSoapClient {
 
   getCircuitBreaker(name: string): SimpleCircuitBreaker {
     if (!this.breakers.has(name)) {
-      this.breakers.set(name, new SimpleCircuitBreaker(name));
+      this.breakers.set(name, new SimpleCircuitBreaker(this.logger, name));
     }
     return this.breakers.get(name)!;
   }

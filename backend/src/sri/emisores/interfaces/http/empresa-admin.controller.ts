@@ -17,7 +17,7 @@ import {
   ApiBearerAuth,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { EmisoresService } from '../../application/emisores.service';
 import {

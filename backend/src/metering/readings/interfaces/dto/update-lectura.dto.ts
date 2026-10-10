@@ -1,5 +1,5 @@
 import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 export class ActualizarLecturaDto {
   @IsOptional() @IsDateString() fecha?: string | Date;

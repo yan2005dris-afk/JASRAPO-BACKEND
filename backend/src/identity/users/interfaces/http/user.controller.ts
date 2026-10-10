@@ -22,8 +22,8 @@ import {
   UserDetailResponseDto,
 } from '../dto/user-response.dto';
 import { UserService } from '../../application/user.service';
-import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { AuthUserId } from 'src/common/decorators/auth-user-id.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
   ApiConsumes,

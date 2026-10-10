@@ -21,7 +21,7 @@ import {
   ApiTags,
   ApiParam,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('tariff-categories')

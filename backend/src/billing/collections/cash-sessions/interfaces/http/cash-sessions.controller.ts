@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { PrismaCashSessionRepository } from '../../infrastructure/repositories/prisma-cash-session.repository';

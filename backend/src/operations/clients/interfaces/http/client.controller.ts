@@ -8,7 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -18,7 +18,7 @@ import {
   ApiBody,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { ClientService } from '../../application/client.service';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';

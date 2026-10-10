@@ -3,7 +3,7 @@ import axios from 'axios';
 import { readFileSync, existsSync } from 'fs';
 import { join, resolve, sep } from 'path';
 import { PDFDocument } from 'pdf-lib';
-import { validateSafeUrl } from '../../../../infrastructure/common/utils/url.util';
+import { validateSafeUrl } from 'src/shared/utils/url.util';
 import { STORAGE_PATHS } from './storage-paths';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';

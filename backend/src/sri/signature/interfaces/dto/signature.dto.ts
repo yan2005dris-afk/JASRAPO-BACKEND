@@ -1,7 +1,7 @@
 import { IsOptional, IsObject, IsNumber, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 export class SignaturePositionDto {
   @ApiPropertyOptional({

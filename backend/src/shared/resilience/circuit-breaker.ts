@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import type { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 /**
  * A lightweight generic Circuit Breaker for resilience.
@@ -6,18 +6,19 @@ import { Logger } from '@nestjs/common';
  * Prevents hammering degraded or downed services.
  */
 export class SimpleCircuitBreaker {
-  private readonly logger: Logger;
+  private readonly context: string;
   private state: 'CLOSED' | 'OPEN' | 'HALF-OPEN' = 'CLOSED';
   private failureCount = 0;
   private nextAttemptTime = 0;
 
   constructor(
+    private readonly logger: LoggerService,
     private readonly name: string,
     private readonly threshold = 5,
     private readonly cooldownMs = 30000,
     private readonly isBusinessError?: (error: unknown) => boolean,
   ) {
-    this.logger = new Logger(`${SimpleCircuitBreaker.name}:${name}`);
+    this.context = `${SimpleCircuitBreaker.name}:${name}`;
   }
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
@@ -25,6 +26,7 @@ export class SimpleCircuitBreaker {
       if (Date.now() > this.nextAttemptTime) {
         this.logger.warn(
           `Circuit Breaker is HALF-OPEN. Testing service availability.`,
+          this.context,
         );
         this.state = 'HALF-OPEN';
       } else {
@@ -35,7 +37,10 @@ export class SimpleCircuitBreaker {
     try {
       const result = await fn();
       if (this.state === 'HALF-OPEN') {
-        this.logger.log(`Circuit Breaker is CLOSED again. Service recovered.`);
+        this.logger.log(
+          `Circuit Breaker is CLOSED again. Service recovered.`,
+          this.context,
+        );
         this.state = 'CLOSED';
         this.failureCount = 0;
       }
@@ -49,11 +54,14 @@ export class SimpleCircuitBreaker {
       this.failureCount++;
       this.logger.warn(
         `Failure [${this.failureCount}/${this.threshold}] on Circuit Breaker: ${(error as Error).message}`,
+        this.context,
       );
 
       if (this.state === 'HALF-OPEN' || this.failureCount >= this.threshold) {
         this.logger.error(
           `Circuit Breaker is now OPEN. Cooldown active for ${this.cooldownMs}ms.`,
+          undefined,
+          this.context,
         );
         this.state = 'OPEN';
         this.nextAttemptTime = Date.now() + this.cooldownMs;

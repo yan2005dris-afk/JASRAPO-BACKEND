@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, MaxLength } from 'class-validator';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 /**
  * Estados a los que se puede cambiar un convenio mediante PATCH.

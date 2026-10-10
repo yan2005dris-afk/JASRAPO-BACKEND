@@ -7,9 +7,9 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
-import { NotEmptyBodyPipe } from 'src/infrastructure/common/pipes/not-empty-body.pipe';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
-import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
+import { NotEmptyBodyPipe } from 'src/common/pipes/not-empty-body.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
+import { ParseActualizarLecturaPipe } from 'src/common/pipes/parse-actualizar-lectura.pipe';
 import { ReadingService } from '../../application/reading.service';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
 import { ResponseReadingDto } from '../dto/response-reading.dto';
@@ -23,7 +23,7 @@ import {
   ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
 import {
   EnumStateDto,

@@ -22,9 +22,9 @@ import {
   ApiConsumes,
   type ApiResponseOptions,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { UpdateOperatorWorkOrderUseCase } from '../../application/use-cases/update-operator-work-order.use-case';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';

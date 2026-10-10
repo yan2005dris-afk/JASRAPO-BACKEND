@@ -29,7 +29,7 @@ import {
   EmisorResponseDto,
   UploadCertificadoDto,
 } from '../dto/emisor.dto';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

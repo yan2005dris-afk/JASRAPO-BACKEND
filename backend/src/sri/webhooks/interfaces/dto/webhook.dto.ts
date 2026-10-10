@@ -12,7 +12,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 export const WEBHOOK_EVENTS = [
   'comprobante.creado',

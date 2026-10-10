@@ -17,7 +17,7 @@ import {
   TipoIdentificacion,
   FormaPago,
 } from '../../domain/constants/sri.enums';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 export class EmisorDto {
   @ApiProperty({ description: 'RUC del emisor (13 dígitos)' })

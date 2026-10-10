@@ -18,10 +18,10 @@ import {
   ApiConsumes,
   ApiResponse,
 } from '@nestjs/swagger';
-import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
-import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
+import { AuthUserId } from 'src/common/decorators/auth-user-id.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
+import { createImageFileFilter } from 'src/infrastructure/storage/evidence-upload.util';
 import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 import { WorkOrderNoveltyService } from '../../application/work-order-novelty.service';
 import { CreateWorkOrderNoveltyDto } from '../dto/create-work-order-novelty.dto';

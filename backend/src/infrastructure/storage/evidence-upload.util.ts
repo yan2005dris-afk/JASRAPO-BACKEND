@@ -12,7 +12,7 @@ import {
   EVIDENCE_MAX_PIXELS,
   EVIDENCE_MAX_WIDTH_PX,
 } from 'src/infrastructure/config/app.constants';
-import { ImageProcessorUtil } from './image-processor.util';
+import { ImageProcessorUtil } from 'src/shared/utils/image-processor.util';
 
 export type EvidenceLogger = {
   debug(message: string): void;

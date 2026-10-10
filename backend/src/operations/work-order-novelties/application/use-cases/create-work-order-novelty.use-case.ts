@@ -17,7 +17,7 @@ import {
 import {
   rollbackEvidenceUpload,
   uploadEvidence,
-} from 'src/infrastructure/common/utils/evidence-upload.util';
+} from 'src/infrastructure/storage/evidence-upload.util';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { TipoAnomalia } from 'src/shared/enums';
 

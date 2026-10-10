@@ -7,11 +7,11 @@ import {
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Public } from 'src/infrastructure/common/decorators/public.decorator';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { AcceptInvitationUseCase } from '../../application/use-cases/accept-invitation.use-case';
 import { InvitationService } from '../../application/services/invitation.service';
 import { InvitationMetricsService } from '../../application/services/invitation-metrics.service';

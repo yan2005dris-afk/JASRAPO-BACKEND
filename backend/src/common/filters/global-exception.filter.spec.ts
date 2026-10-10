@@ -8,8 +8,8 @@ import type { ConfigService } from '@nestjs/config';
 import type { ArgumentsHost } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { GlobalExceptionFilter } from './global-exception.filter';
-import type { LoggerService } from '../../../infrastructure/observability/logger/logger.service';
-import { ConflictDomainException } from '../../../shared/domain/exceptions/domain.exception';
+import type { LoggerService } from '../../infrastructure/observability/logger/logger.service';
+import { ConflictDomainException } from '../../shared/domain/exceptions/domain.exception';
 
 interface MockResponse extends Partial<Response> {
   status: jest.Mock;

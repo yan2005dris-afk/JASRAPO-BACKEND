@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
+import { LoggerService } from '../../infrastructure/observability/logger/logger.service';
 import { PermissionsGuard } from './permissions.guard';
 import { PERMISSION_KEY } from '../decorators/require-permission.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -21,6 +22,10 @@ describe('PermissionsGuard', () => {
             get: jest.fn(),
             getAllAndOverride: jest.fn(),
           },
+        },
+        {
+          provide: LoggerService,
+          useValue: { log: jest.fn(), warn: jest.fn(), error: jest.fn() },
         },
       ],
     }).compile();

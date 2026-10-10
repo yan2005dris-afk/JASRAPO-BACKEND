@@ -10,8 +10,8 @@ import {
   Length,
   MaxLength,
 } from 'class-validator';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
-import { IsPastDate } from 'src/infrastructure/common/decorators/is-past-date.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
+import { IsPastDate } from 'src/common/decorators/is-past-date.decorator';
 
 /** IDs del catálogo `catalogo_tipos_identificacion` */
 const CATALOGO = {

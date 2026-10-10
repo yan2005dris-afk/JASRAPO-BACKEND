@@ -10,7 +10,7 @@ import { FindOnePeriodUseCase } from '../../application/use-cases/find-one-perio
 import { UpdatePeriodUseCase } from '../../application/use-cases/update-period.use-case';
 import { DeletePeriodUseCase } from '../../application/use-cases/delete-period.use-case';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 
 describe('PeriodsController', () => {
   let controller: PeriodsController;

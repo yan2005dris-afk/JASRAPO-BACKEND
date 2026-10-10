@@ -8,7 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
-import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { WebhooksService } from '../../application/webhooks.service';
 import { CreateWebhookDto, UpdateWebhookDto } from '../dto/webhook.dto';
 

@@ -13,7 +13,7 @@ import { PermissionsService } from '../../application/permissions.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../dto/update-permission.dto';
 import { PermissionResponseDto } from '../dto/permission-response.dto';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
   ApiTags,

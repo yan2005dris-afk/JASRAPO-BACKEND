@@ -21,8 +21,8 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';

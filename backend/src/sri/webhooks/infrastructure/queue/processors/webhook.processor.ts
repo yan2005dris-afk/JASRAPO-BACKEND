@@ -2,12 +2,12 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import type { Prisma } from 'src/generated/prisma/client';
 import { JobsService } from '../../../../../infrastructure/jobs/jobs.service';
-import { readLimitedText } from '../../../../../infrastructure/common/utils/url.util';
+import { readLimitedText } from 'src/shared/utils/url.util';
 import { LoggerService } from '../../../../../infrastructure/observability/logger/logger.service';
 import * as crypto from 'crypto';
 import { Agent } from 'undici';
 import { WEBHOOK_DISPATCH_JOB } from '../../../application/contracts/webhook-job.contract';
-import { SimpleCircuitBreaker } from '../../../../../infrastructure/common/resilience/circuit-breaker';
+import { SimpleCircuitBreaker } from 'src/shared/resilience/circuit-breaker';
 import { resolveAndPin, SsrfBlockedError } from '../../ssrf-resolver';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -86,6 +86,7 @@ export class WebhookProcessor implements OnModuleInit {
       this.breakers.set(
         host,
         new SimpleCircuitBreaker(
+          this.logger,
           host,
           10,
           60000,

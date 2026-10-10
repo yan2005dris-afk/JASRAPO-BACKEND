@@ -24,7 +24,7 @@ import { UpdateDiscountDto } from '../dto/update-discount.dto';
 import { DiscountFilterDto } from '../dto/discount-filter.dto';
 import { DiscountResponseDto } from '../dto/discount-response.dto';
 import { ApplyDiscountToPreinvoiceDto } from '../dto/apply-discount-to-preinvoice.dto';
-import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('Descuentos')

@@ -9,7 +9,7 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import type { Response } from 'express';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
@@ -34,7 +34,7 @@ import {
   ApiBody,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';

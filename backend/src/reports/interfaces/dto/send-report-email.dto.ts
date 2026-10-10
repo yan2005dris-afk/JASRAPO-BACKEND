@@ -8,8 +8,8 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
-import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
+import { IsValidDateRange } from 'src/common/decorators/is-valid-date-range.decorator';
 
 /**
  * Shared body for every POST /reports/.../email endpoint.
