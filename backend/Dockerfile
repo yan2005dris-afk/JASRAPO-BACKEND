@@ -3,8 +3,8 @@
 # ─── Stage: Base ──────────────────────────────────────────────────────────────
 # Hard Rule #2 (pnpm-containerization): pin Node via the pnpm runtime, not the
 # base image. The official `ghcr.io/pnpm/pnpm:12` base bundles pnpm 12.x and
-# is based on `debian:stable-slim` (glibc). We install Node 24 with
-# `pnpm runtime set node 24 -g` so the project owns the Node version.
+# is based on `debian:stable-slim` (glibc). We install Node 26 with
+# `pnpm runtime set node 26 -g` so the project owns the Node version.
 #
 # Why pnpm:12 for BOTH the builder and the runner (the part the skill text
 # doesn't spell out): native modules installed by `pnpm install` in the builder
@@ -15,10 +15,10 @@
 # runtime does not.
 FROM ghcr.io/pnpm/pnpm:12 AS base
 
-# Install Node 24 into pnpm's managed runtime. The pnpm-lock.yaml is the source
+# Install Node 26 into pnpm's managed runtime. The pnpm-lock.yaml is the source
 # of truth for installed deps, so the pnpm version that ships in the base
 # (currently 12.9.1) is fine; --frozen-lockfile reads the lockfile as-is.
-RUN pnpm runtime set node 24 -g \
+RUN pnpm runtime set node 26 -g \
  && pnpm --version \
  && node --version
 
