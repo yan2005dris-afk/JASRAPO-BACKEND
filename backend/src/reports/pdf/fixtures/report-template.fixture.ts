@@ -1,5 +1,5 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import { PaymentAgreementPdfDocumentType } from 'src/billing/collections/agreements/pdf/payment-agreement.pdf-type';
+import { PaymentAgreementPdfDocumentType } from '../factories/payment-agreement.factory';
 import { projectAccountStatementReport } from '../../application/definitions/account-statement-report.definition';
 import { projectClientsListReport } from '../../application/definitions/clients-list-report.definition';
 import { projectConnectionHistoryReport } from '../../application/definitions/connection-history-report.definition';
