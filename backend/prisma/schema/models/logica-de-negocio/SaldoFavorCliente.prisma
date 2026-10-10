@@ -7,8 +7,8 @@ model SaldoFavorCliente {
   disponibleParaAplicar Boolean         @default(true) @map("disponible_para_aplicar")
   createdAt             DateTime        @default(now()) @map("creado_en")
   deletedAt             DateTime?       @map("borrado_en")
-  cliente               Clientes        @relation(fields: [clienteId], references: [clienteId])
-  pago                  Pagos?          @relation(fields: [pagoId], references: [pagoId])
+  cliente               Clientes        @relation(fields: [clienteId], references: [clienteId], onDelete: Restrict)
+  pago                  Pagos?          @relation(fields: [pagoId], references: [pagoId], onDelete: SetNull)
 
   @@index([clienteId])
   @@index([pagoId])

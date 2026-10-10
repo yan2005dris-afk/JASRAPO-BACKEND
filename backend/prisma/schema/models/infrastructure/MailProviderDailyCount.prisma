@@ -4,5 +4,6 @@ model MailProviderDailyCount {
   sentCount    Int      @default(0) @map("sent_count")
 
   @@id([providerName, usageDate])
+  @@index([usageDate])
   @@map("mail_provider_daily_counts")
 }
