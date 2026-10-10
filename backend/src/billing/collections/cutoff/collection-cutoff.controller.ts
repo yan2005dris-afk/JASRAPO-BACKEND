@@ -8,13 +8,13 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CollectionCutoffService } from './collection-cutoff.service';
 
-@ApiTags('reports')
+@ApiTags('collections')
 @ApiBearerAuth()
-@Controller('reports')
+@Controller('collections')
 export class CollectionCutoffController {
   constructor(private readonly service: CollectionCutoffService) {}
 
-  @Get('collection-cutoff-candidates')
+  @Get('cutoff-candidates')
   @RequiredPermission('reportes', 'read')
   @ApiResponse({
     status: 200,

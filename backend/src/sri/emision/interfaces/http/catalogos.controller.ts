@@ -8,7 +8,7 @@ import { RequiredPermission } from '../../../../infrastructure/common/decorators
 @LogContext()
 @ApiTags('[SRI] Catálogos')
 @RequiredPermission('catalogos', 'read')
-@Controller('catalogos')
+@Controller('sri/catalogs')
 export class CatalogosController {
   constructor(
     private readonly catalogoService: CatalogoValidatorService,
@@ -23,7 +23,7 @@ export class CatalogosController {
   })
   @ApiResponse({ status: 200, description: 'Lista de tarifas de impuestos' })
   async listarImpuestos(): Promise<{ impuestos: any[] }> {
-    this.logger.log('GET /catalogos/impuestos');
+    this.logger.log('GET /sri/catalogs/impuestos');
 
     // Get all tarifas for each impuesto type
     const iva = await this.catalogoService.getTarifasVigentes('2');
@@ -70,7 +70,7 @@ export class CatalogosController {
   })
   @ApiResponse({ status: 200, description: 'Lista de códigos de retención' })
   async listarRetenciones(): Promise<{ retenciones: any[] }> {
-    this.logger.log('GET /catalogos/retenciones');
+    this.logger.log('GET /sri/catalogs/retenciones');
 
     const renta = await this.catalogoService.getRetencionesPorTipo('RENTA');
     const iva = await this.catalogoService.getRetencionesPorTipo('IVA');
@@ -106,7 +106,7 @@ export class CatalogosController {
   })
   @ApiResponse({ status: 200, description: 'Lista de formas de pago' })
   async listarFormasPago(): Promise<{ formasPago: any[] }> {
-    this.logger.log('GET /catalogos/formas-pago');
+    this.logger.log('GET /sri/catalogs/formas-pago');
 
     const formasPago = await this.catalogoService.getFormasPago();
 
@@ -125,7 +125,7 @@ export class CatalogosController {
   })
   @ApiResponse({ status: 200, description: 'Lista de tipos de identificación' })
   async listarTiposIdentificacion(): Promise<{ tiposIdentificacion: any[] }> {
-    this.logger.log('GET /catalogos/tipos-identificacion');
+    this.logger.log('GET /sri/catalogs/tipos-identificacion');
 
     const tipos = await this.catalogoService.getTiposIdentificacion();
 
@@ -145,7 +145,7 @@ export class CatalogosController {
   })
   @ApiResponse({ status: 200, description: 'Lista de documentos sustento' })
   async listarDocumentosSustento(): Promise<{ documentosSustento: any[] }> {
-    this.logger.log('GET /catalogos/documentos-sustento');
+    this.logger.log('GET /sri/catalogs/documentos-sustento');
 
     const documentos = await this.catalogoService.getDocumentosSustento();
 
