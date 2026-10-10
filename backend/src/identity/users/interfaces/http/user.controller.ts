@@ -41,7 +41,11 @@ const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 const AVATAR_UPLOAD_OPTIONS = {
   limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-  fileFilter: (req: any, file: Express.Multer.File, callback: any) => {
+  fileFilter: (
+    req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
     if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
       return callback(
         new BadRequestException(

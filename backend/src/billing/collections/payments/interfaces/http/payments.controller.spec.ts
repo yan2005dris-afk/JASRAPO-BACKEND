@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { EstadoPago } from 'src/shared/enums';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from '../../application/payments.service';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { PaymentRow } from '../../domain/types/payment.types';
 import { SaldoFavorRow } from '../../domain/types/payment.types';
 import {
@@ -29,6 +30,14 @@ describe('PaymentsController', () => {
     applySaldoFavor: jest.fn(),
     getDailyCashSummary: jest.fn(),
   };
+
+  const mockUser = (email: string): JwtPayload => ({
+    sub: 1,
+    usersId: 1,
+    sid: 'test-sid',
+    email,
+    permisos: [],
+  });
 
   const mockPayment = paymentRow({
     pagoId: 1n,
@@ -89,7 +98,7 @@ describe('PaymentsController', () => {
         montoTotalRecibido: 10,
         detalle: [{ tipoPago: 'PAGO_LIBRE', montoAbonado: 10, formaPagoId: 1 }],
       },
-      { email: 'admin@jasrapo.com' },
+      mockUser('admin@jasrapo.com'),
     );
     expect(result.pagoId).toBe('1');
     expect(service.create).toHaveBeenCalledWith(
@@ -97,7 +106,6 @@ describe('PaymentsController', () => {
       'admin@jasrapo.com',
     );
   });
-
   it('should expose POST /payments/cobro-puntual', () => {
     expect(Reflect.getMetadata(PATH_METADATA, PaymentsController)).toBe(
       'payments',
@@ -119,9 +127,10 @@ describe('PaymentsController', () => {
     };
     service.createCobroPuntual.mockResolvedValue(mockPayment);
 
-    const result = await controller.createCobroPuntual(dto, {
-      email: 'admin@jasrapo.com',
-    });
+    const result = await controller.createCobroPuntual(
+      dto,
+      mockUser('admin@jasrapo.com'),
+    );
 
     expect(result.pagoId).toBe('1');
     expect(service.createCobroPuntual).toHaveBeenCalledWith(
@@ -172,9 +181,11 @@ describe('PaymentsController', () => {
       paymentRow({ ...mockPayment, estadoPago: EstadoPago.REGISTRADO }),
     );
 
-    const result = await controller.updateState(1n, dto, {
-      email: 'admin@test.com',
-    });
+    const result = await controller.updateState(
+      1n,
+      dto,
+      mockUser('admin@test.com'),
+    );
 
     expect(result.estadoPago).toBe(EstadoPago.REGISTRADO);
     expect(service.updateState).toHaveBeenCalledWith(1n, dto, 'admin@test.com');
@@ -186,7 +197,11 @@ describe('PaymentsController', () => {
       paymentRow({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
     );
 
-    const result = await controller.annul(1n, dto, { email: 'admin@test.com' });
+    const result = await controller.annul(
+      1n,
+      dto,
+      mockUser('admin@test.com'),
+    );
 
     expect(result.estadoPago).toBe(EstadoPago.ANULADO);
     expect(service.annul).toHaveBeenCalledWith(1n, {
@@ -205,9 +220,10 @@ describe('PaymentsController', () => {
     };
     service.applySaldoFavor.mockResolvedValue(mockPayment);
 
-    const result = await controller.applySaldoFavor(dto, {
-      email: 'admin@test.com',
-    });
+    const result = await controller.applySaldoFavor(
+      dto,
+      mockUser('admin@test.com'),
+    );
 
     expect(result.pagoId).toBe('1');
     expect(service.applySaldoFavor).toHaveBeenCalledWith(dto, 'admin@test.com');

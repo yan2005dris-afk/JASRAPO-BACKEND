@@ -131,7 +131,7 @@ export class AuditService implements OnModuleInit {
   /**
    * Buscar registros de auditoría con filtros
    */
-  async search(_filters: any) {
+  async search(_filters: Record<string, unknown>) {
     return { data: [], total: 0, page: 1, totalPages: 0 };
   }
 }

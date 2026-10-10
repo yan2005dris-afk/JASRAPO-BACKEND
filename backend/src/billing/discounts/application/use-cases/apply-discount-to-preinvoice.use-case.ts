@@ -46,13 +46,19 @@ export class ApplyDiscountToPreinvoiceUseCase {
       // 3. Encontrar el detalle al que aplica el descuento:
       //    Si el catálogo tiene rubroId → buscar por ese rubro específico.
       //    Si no → fallback al detalle de Cargo Fijo (codigoSri '002').
+      // `prefactura` viene de un `tx` tipado como `any` por decisión
+      // documentada (NOTA SC-187 en discount.repository.ts); se acota acá
+      // con el shape mínimo que este caso de uso necesita.
+      type DetalleConRubro = {
+        prefacturaDetalleId: number;
+        rubroId: number | null;
+        subtotal: number | string | { toString(): string };
+        rubro: { codigoSri: string | null } | null;
+      };
+      const detalles = prefactura.prefacturaDetalle as DetalleConRubro[];
       const targetDetalle = catalogo.rubroId
-        ? prefactura.prefacturaDetalle.find(
-            (d: any) => d.rubroId === catalogo.rubroId,
-          )
-        : prefactura.prefacturaDetalle.find(
-            (d: any) => d.rubro?.codigoSri === '002',
-          );
+        ? detalles.find((d) => d.rubroId === catalogo.rubroId)
+        : detalles.find((d) => d.rubro?.codigoSri === '002');
 
       if (!targetDetalle) {
         throw new BadRequestException(

@@ -114,7 +114,7 @@ export class AnnulPaymentUseCase {
   private async revertInstallment(
     tx: TransactionContext,
     cuotaConvenioId: bigint,
-    montoAbonado: any,
+    montoAbonado: number | Decimal,
   ) {
     const cuota = await this.paymentRepository.findCuotaConvenioById(
       cuotaConvenioId,

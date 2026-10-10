@@ -26,7 +26,6 @@ import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { InvitationService } from 'src/identity/auth/application/services/invitation.service';
-
 @LogContext()
 @Injectable()
 export class UserService {
@@ -76,8 +75,7 @@ export class UserService {
               usuarioId: dbUser.usuarioId,
               email: dbUser.email,
               nombres: dbUser.nombres,
-              apellidos: dbUser.apellidos,
-            } as any,
+            },
             adminUserId,
           );
         }

@@ -9,7 +9,7 @@ export class CreateRoleUseCase {
   async execute(createRoleDto: CreateRoleDto) {
     try {
       return await this.roleRepository.create(createRoleDto.nombre);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (this.isRolesIdUniqueConstraintError(error)) {
         await this.roleRepository.syncSequence();
         return await this.roleRepository.create(createRoleDto.nombre);
@@ -18,14 +18,21 @@ export class CreateRoleUseCase {
     }
   }
 
-  private isRolesIdUniqueConstraintError(error: any): boolean {
+  private isRolesIdUniqueConstraintError(error: unknown): boolean {
     if (!error || typeof error !== 'object') return false;
-    if (error.code !== 'P2002') return false;
-    const target = error.meta?.target;
+    const prismaError = error as {
+      code?: unknown;
+      meta?: {
+        target?: unknown;
+        driverAdapterError?: { cause?: { constraint?: { fields?: unknown } } };
+      };
+    };
+    if (prismaError.code !== 'P2002') return false;
+    const target = prismaError.meta?.target;
     if (Array.isArray(target) && target.some((field) => field === 'roles_id'))
       return true;
     const driverFields =
-      error.meta?.driverAdapterError?.cause?.constraint?.fields;
+      prismaError.meta?.driverAdapterError?.cause?.constraint?.fields;
     if (
       Array.isArray(driverFields) &&
       driverFields.some((field) => field === 'roles_id')

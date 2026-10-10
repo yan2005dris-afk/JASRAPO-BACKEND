@@ -4,7 +4,7 @@ import { JobsService } from '../../../jobs/jobs.service';
 import { MailProviderFactory } from '../providers/provider.factory';
 import { StorageService } from '../../../storage/storage.service';
 import type { SendMailOptions } from '../../domain/interfaces/mail-provider.interface';
-import type { SendOptions } from 'pg-boss';
+import type { Job, SendOptions } from 'pg-boss';
 
 export const MAIL_JOB_NAME = 'send-mail';
 const S3_URL_REGEX = /^s3:\/\/([^/]+)\/(.+)$/;
@@ -98,7 +98,7 @@ export class MailQueueService implements OnModuleInit {
    * Lógica de procesamiento real del trabajo.
    * Versión-aware: detecta version:1 (legacy) vs version:2 (URLs or inline).
    */
-  private async processMailJob(job: any): Promise<void> {
+  private async processMailJob(job: Job<SendMailOptions>): Promise<void> {
     const data: SendMailOptions = job.data;
     this.logger.log(
       `Procesando envío de correo para: ${Array.isArray(data.to) ? data.to.join(', ') : data.to} - Asunto: ${data.subject}`,

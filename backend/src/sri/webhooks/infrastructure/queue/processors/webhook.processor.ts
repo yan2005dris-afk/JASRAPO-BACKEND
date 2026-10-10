@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
+import type { Prisma } from 'src/generated/prisma/client';
 import { JobsService } from '../../../../../infrastructure/jobs/jobs.service';
 import { readLimitedText } from '../../../../../infrastructure/common/utils/url.util';
 import { LoggerService } from '../../../../../infrastructure/observability/logger/logger.service';
@@ -17,6 +18,20 @@ export class WebhookBusinessError extends Error {
     Object.setPrototypeOf(this, WebhookBusinessError.prototype);
   }
 }
+
+/**
+ * Shape mínimo del job pg-boss que procesa este processor.
+ */
+type WebhookJob = {
+  data: {
+    configId: string;
+    url: string;
+    secreto: string;
+    evento: string;
+    payload: Record<string, unknown>;
+  };
+  retrycount?: number;
+};
 
 /**
  * Processor de webhooks migrado a pg-boss (PostgreSQL) usando Prisma.
@@ -74,14 +89,17 @@ export class WebhookProcessor implements OnModuleInit {
           host,
           10,
           60000,
-          (err) => !!err.isBusinessError,
+          (err) =>
+            !!(
+              err as unknown as { isBusinessError?: unknown }
+            ).isBusinessError,
         ),
       );
     }
     return this.breakers.get(host)!;
   }
 
-  private async processWebhook(job: any): Promise<void> {
+  private async processWebhook(job: WebhookJob): Promise<void> {
     const { configId, url, secreto, evento, payload } = job.data;
     const attempt = (job.retrycount || 0) + 1;
     const startTime = Date.now();
@@ -215,7 +233,7 @@ export class WebhookProcessor implements OnModuleInit {
         data: {
           configId,
           evento,
-          payload: payload as any,
+          payload: payload as Prisma.InputJsonValue,
           statusCode,
           respuesta,
           intento,

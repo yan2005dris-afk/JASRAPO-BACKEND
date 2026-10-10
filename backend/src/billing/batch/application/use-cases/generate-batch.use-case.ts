@@ -94,11 +94,11 @@ export class GenerateBatchUseCase {
         message: 'Lote de prefacturas generado exitosamente',
         batchId: Number(loteId),
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof InvalidDomainOperationException) {
         throw err;
       }
-      const rawMessage = err?.message || '';
+      const rawMessage = err instanceof Error ? err.message : '';
       if (
         rawMessage.includes('uk_lote_comunidad_periodo_mes') ||
         rawMessage.includes('unique constraint')

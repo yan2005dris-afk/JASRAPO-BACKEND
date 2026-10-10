@@ -118,7 +118,7 @@ export class PaymentsController {
   @Post('cobro-puntual')
   async createCobroPuntual(
     @Body() dto: CreateCobroPuntualDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.createCobroPuntual(
       dto,

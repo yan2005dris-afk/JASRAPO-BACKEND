@@ -227,7 +227,7 @@ export class PrismaUserRepository implements UserRepository {
       deduplicatedPermissions.map((p) => p.permisoId),
     );
 
-    const run = async (innerTx: any) => {
+    const run = async (innerTx: Prisma.TransactionClient) => {
       const permissionsToRemove = [...activePermissionIds].filter(
         (id) => !newPermissionIds.has(id),
       );
@@ -251,7 +251,7 @@ export class PrismaUserRepository implements UserRepository {
         select: { permisoId: true },
       });
       const validPermissionIds = new Set(
-        validPermissions.map((p: any) => p.permisoId),
+        validPermissions.map((p) => p.permisoId),
       );
 
       const invalidIds = deduplicatedPermissions

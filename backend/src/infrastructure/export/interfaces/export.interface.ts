@@ -2,17 +2,17 @@ import type { Readable } from 'node:stream';
 
 export type ExportFormat = 'csv' | 'xlsx' | 'pdf' | 'json';
 
-export interface ColumnDefinition<T = any> {
+export interface ColumnDefinition<T = unknown> {
   header: string;
   key: keyof T | string;
   width?: number;
   transform?: (
-    value: any,
+    value: unknown,
     row: T,
   ) => string | number | boolean | Date | null | undefined;
 }
 
-export interface StreamExportOptions<T = any> {
+export interface StreamExportOptions<T = unknown> {
   filename: string;
   format: 'csv' | 'xlsx';
   columns: ColumnDefinition<T>[];

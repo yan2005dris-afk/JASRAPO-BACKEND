@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/identity/users/application/user.service';
+import type { CreateUserDto } from 'src/identity/users/interfaces/dto/create-user.dto';
 import { RegisterDto } from '../../interfaces/dto/register.dto';
 import {
   EntityAlreadyExistsException,
@@ -32,7 +33,7 @@ export class RegisterUseCase {
       );
     }
 
-    const createUserData: any = {
+    const createUserData: CreateUserDto = {
       email: registerDto.email,
       nombres: registerDto.nombres,
       apellidos: registerDto.apellidos,

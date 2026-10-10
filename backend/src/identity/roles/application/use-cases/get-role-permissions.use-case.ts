@@ -13,7 +13,7 @@ export class GetRolePermissionsUseCase {
 
     const assignments = role.rolPermisos || [];
 
-    return assignments.map((assignment: any) => ({
+    return assignments.map((assignment) => ({
       rolPermisoId: assignment.rolPermisoId,
       permisoId: assignment.permisoId,
       recurso: assignment.permiso.recurso,

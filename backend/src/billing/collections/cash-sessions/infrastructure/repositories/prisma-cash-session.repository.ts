@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { Prisma } from 'src/generated/prisma/client';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -16,7 +17,7 @@ export class PrismaCashSessionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getCurrentSession(creadoPor?: string) {
-    const where: any = { estado: 'ABIERTA' };
+    const where: Prisma.CajaSesionWhereInput = { estado: 'ABIERTA' };
     if (creadoPor) {
       where.creadoPor = creadoPor;
     }

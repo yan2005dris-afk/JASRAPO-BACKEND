@@ -1,7 +1,40 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { Prisma } from 'src/generated/prisma/client';
+import type { EstadoNovedad } from 'src/shared/enums';
 import { WorkOrderNoveltyService } from 'src/operations/work-order-novelties/application/work-order-novelty.service';
 import type { UpdateWorkOrderNoveltyDto } from 'src/operations/work-order-novelties/interfaces/dto/update-work-order-novelty.dto';
+
+const novedadDetailInclude = {
+  ordenTrabajo: {
+    select: {
+      contratoId: true,
+      medidorId: true,
+      medidor: { select: { serie: true } },
+      contrato: {
+        select: {
+          numeroGuia: true,
+          direccionSuministro: true,
+          cliente: {
+            select: { nombres: true, apellidos: true, razonSocial: true },
+          },
+        },
+      },
+      ruta: {
+        select: {
+          comunidadId: true,
+          sectorId: true,
+          comunidad: { select: { nombre: true } },
+          sector: { select: { nombre: true } },
+        },
+      },
+    },
+  },
+} satisfies Prisma.NovedadOrdenTrabajoInclude;
+
+type NovedadDetailRow = Prisma.NovedadOrdenTrabajoGetPayload<{
+  include: typeof novedadDetailInclude;
+}>;
 
 @Injectable()
 export class OperatorNoveltiesService {
@@ -10,39 +43,14 @@ export class OperatorNoveltiesService {
     private readonly novelties: WorkOrderNoveltyService,
   ) {}
 
-  private readonly detail = {
-    ordenTrabajo: {
-      select: {
-        contratoId: true,
-        medidorId: true,
-        medidor: { select: { serie: true } },
-        contrato: {
-          select: {
-            numeroGuia: true,
-            direccionSuministro: true,
-            cliente: {
-              select: { nombres: true, apellidos: true, razonSocial: true },
-            },
-          },
-        },
-        ruta: {
-          select: {
-            comunidadId: true,
-            sectorId: true,
-            comunidad: { select: { nombre: true } },
-            sector: { select: { nombre: true } },
-          },
-        },
-      },
-    },
-  } as const;
+  private readonly detail = novedadDetailInclude;
 
   private readonly visibleTo = (operarioId: number) => ({
     deletedAt: null,
     ordenTrabajo: { ruta: { operarioId } },
   });
 
-  private toResponse(row: any) {
+  private toResponse(row: NovedadDetailRow) {
     const order = row.ordenTrabajo;
     const client = order.contrato.cliente;
     const ruta = order.ruta;
@@ -81,13 +89,13 @@ export class OperatorNoveltiesService {
       estado?: string;
     },
   ) {
-    const where: any = {
+    const where: Prisma.NovedadOrdenTrabajoWhereInput = {
       ...this.visibleTo(operarioId),
       ...(filters?.lecturaId ? { lecturaId: filters.lecturaId } : {}),
       ...(filters?.ordenTrabajoId
         ? { ordenTrabajoId: filters.ordenTrabajoId }
         : {}),
-      ...(filters?.estado ? { estado: filters.estado } : {}),
+      ...(filters?.estado ? { estado: filters.estado as EstadoNovedad } : {}),
     };
     const [rows, total] = await Promise.all([
       this.prisma.novedadOrdenTrabajo.findMany({

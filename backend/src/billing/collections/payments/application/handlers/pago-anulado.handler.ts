@@ -116,10 +116,12 @@ export class PagoAnuladoHandler {
             },
           ],
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'unknown';
+        const stack = err instanceof Error ? err.stack : undefined;
         this.logger.error(
-          `Error al emitir Nota de Crédito para comprobante ${comprobanteId}: ${err.message}`,
-          err.stack,
+          `Error al emitir Nota de Crédito para comprobante ${comprobanteId}: ${message}`,
+          stack,
         );
       }
     }
