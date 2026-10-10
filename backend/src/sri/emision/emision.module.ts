@@ -21,7 +21,6 @@ import { ClaveAccesoService } from './infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from './infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from './infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from './infrastructure/soap/sri-soap.client';
-import { SriSoapFactoryService } from './infrastructure/soap/sri-soap-factory.service';
 import { XmlStorageService } from './infrastructure/storage/xml-storage.service';
 import { ImageService } from './infrastructure/storage/image.service';
 import { PdfImageService } from './infrastructure/storage/pdf-image.service';
@@ -68,7 +67,6 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     XmlBuilderService,
     XmlSignerService,
     SriSoapClient,
-    SriSoapFactoryService,
     XmlStorageService,
     ImageService,
     PdfImageService,

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SriSoapFactoryService } from './sri-soap-factory.service';
+import { parseStringPromise } from 'xml2js';
+import { SimpleCircuitBreaker } from '../../../../infrastructure/common/resilience/circuit-breaker';
 import type {
   SriRecepcionResponse,
   SriAutorizacionResponse,
@@ -11,17 +12,41 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
- * Cliente SOAP para comunicación con los servicios web del SRI Ecuador.
+ * Cliente HTTP nativo para comunicación con los servicios web SOAP del SRI Ecuador.
+ * No requiere la librería pesada 'soap' ni descarga de WSDLs en tiempo de ejecución.
+ * Construye envelopes SOAP 1.1 y despacha peticiones HTTP nativas con fetch y circuit breaker.
  */
 @LogContext()
 @Injectable()
 export class SriSoapClient {
+  private readonly breakers = new Map<string, SimpleCircuitBreaker>();
+
+  private readonly SRI_URLS = {
+    recepcion: {
+      '1': 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline',
+      '2': 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline',
+    },
+    autorizacion: {
+      '1': 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline',
+      '2': 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline',
+    },
+  };
+
   constructor(
     private readonly configService: ConfigService,
-    private readonly soapFactory: SriSoapFactoryService,
     private readonly logger: LoggerService,
   ) {}
 
+  getCircuitBreaker(name: string): SimpleCircuitBreaker {
+    if (!this.breakers.has(name)) {
+      this.breakers.set(name, new SimpleCircuitBreaker(name));
+    }
+    return this.breakers.get(name)!;
+  }
+
+  /**
+   * Envía un comprobante XML firmado al SRI para validación (Recepción).
+   */
   async validarComprobante(
     xmlFirmado: string,
     ambiente: '1' | '2',
@@ -29,24 +54,48 @@ export class SriSoapClient {
     this.logger.log(
       `Enviando comprobante al SRI para validación (Ambiente ${ambiente})`,
     );
-    const xmlBase64 = Buffer.from(xmlFirmado, 'utf-8').toString('base64');
 
-    const breaker = this.soapFactory.getCircuitBreaker(`recepcion_${ambiente}`);
+    const xmlBase64 = Buffer.from(xmlFirmado, 'utf-8').toString('base64');
+    const endpoint = this.SRI_URLS.recepcion[ambiente];
+    if (!endpoint) {
+      throw new Error(`Ambiente no válido para recepción: ${ambiente}`);
+    }
+
+    const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ec="http://ec.gob.sri.ws.recepcion">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <ec:validarComprobante>
+      <xml>${xmlBase64}</xml>
+    </ec:validarComprobante>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+    const breaker = this.getCircuitBreaker(`recepcion_${ambiente}`);
 
     try {
-      const result = await breaker.execute(async () => {
-        const client = await this.soapFactory.getRecepcionClient(ambiente);
-        const [res] = await client.validarComprobanteAsync(
-          { xml: xmlBase64 },
-          { timeout: 15000 },
-        );
-        return res;
+      const responseXml = await breaker.execute(async () => {
+        return await this.sendSoapRequest(endpoint, soapEnvelope);
       });
 
-      const response = result?.RespuestaRecepcionComprobante || result;
-      this.logger.log(`Respuesta del SRI - Estado: ${response?.estado}`);
+      const parsed = await parseStringPromise(responseXml, {
+        explicitArray: false,
+        ignoreAttrs: true,
+      });
 
-      return this.parseRecepcionResponse(response);
+      const root =
+        parsed?.['soap:Envelope']?.['soap:Body']?.[
+          'ns2:validarComprobanteResponse'
+        ]?.RespuestaRecepcionComprobante ||
+        parsed?.['soap:Envelope']?.['soap:Body']?.validarComprobanteResponse
+          ?.RespuestaRecepcionComprobante ||
+        parsed?.RespuestaRecepcionComprobante ||
+        {};
+
+      this.logger.log(
+        `Respuesta del SRI - Estado: ${root?.estado || 'DEVUELTA'}`,
+      );
+      return this.parseRecepcionResponse(root);
     } catch (error) {
       this.logger.error(
         `Error al validar comprobante: ${(error as Error).message}`,
@@ -55,6 +104,9 @@ export class SriSoapClient {
     }
   }
 
+  /**
+   * Consulta el estado de autorización de un comprobante ante el SRI.
+   */
   async autorizarComprobante(
     claveAcceso: string,
   ): Promise<SriAutorizacionResponse> {
@@ -67,26 +119,46 @@ export class SriSoapClient {
     }
 
     const ambiente = claveAcceso.charAt(23) as '1' | '2';
-    const breaker = this.soapFactory.getCircuitBreaker(
-      `autorizacion_${ambiente}`,
-    );
+    const endpoint = this.SRI_URLS.autorizacion[ambiente];
+    if (!endpoint) {
+      throw new Error(`Ambiente no válido para autorización: ${ambiente}`);
+    }
+
+    const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ec="http://ec.gob.sri.ws.autorizacion">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <ec:autorizacionComprobante>
+      <claveAccesoComprobante>${claveAcceso}</claveAccesoComprobante>
+    </ec:autorizacionComprobante>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+    const breaker = this.getCircuitBreaker(`autorizacion_${ambiente}`);
 
     try {
-      const result = await breaker.execute(async () => {
-        const client = await this.soapFactory.getAutorizacionClient(ambiente);
-        const [res] = await client.autorizacionComprobanteAsync(
-          { claveAccesoComprobante: claveAcceso },
-          { timeout: 15000 },
-        );
-        return res;
+      const responseXml = await breaker.execute(async () => {
+        return await this.sendSoapRequest(endpoint, soapEnvelope);
       });
 
-      const response = result?.RespuestaAutorizacionComprobante || result;
-      this.logger.log(
-        `Respuesta del SRI - Autorizaciones: ${response?.numeroComprobantes || 0}`,
-      );
+      const parsed = await parseStringPromise(responseXml, {
+        explicitArray: false,
+        ignoreAttrs: true,
+      });
 
-      return this.parseAutorizacionResponse(response);
+      const root =
+        parsed?.['soap:Envelope']?.['soap:Body']?.[
+          'ns2:autorizacionComprobanteResponse'
+        ]?.RespuestaAutorizacionComprobante ||
+        parsed?.['soap:Envelope']?.['soap:Body']
+          ?.autorizacionComprobanteResponse?.RespuestaAutorizacionComprobante ||
+        parsed?.RespuestaAutorizacionComprobante ||
+        {};
+
+      this.logger.log(
+        `Respuesta del SRI - Autorizaciones: ${root?.numeroComprobantes || 0}`,
+      );
+      return this.parseAutorizacionResponse(root);
     } catch (error) {
       this.logger.error(
         `Error al consultar autorización: ${(error as Error).message}`,
@@ -95,6 +167,9 @@ export class SriSoapClient {
     }
   }
 
+  /**
+   * Ejecuta el flujo completo: recepción + reintentos de consulta de autorización.
+   */
   async enviarYAutorizar(
     xmlFirmado: string,
     claveAcceso: string,
@@ -107,6 +182,7 @@ export class SriSoapClient {
       retryDelay ?? this.configService.get<number>('SRI_RETRY_DELAY_MS', 2000);
 
     const ambiente = claveAcceso.charAt(23) as '1' | '2';
+
     // Paso 1: Validar comprobante (Recepción)
     const recepcion = await this.validarComprobante(xmlFirmado, ambiente);
 
@@ -184,18 +260,105 @@ export class SriSoapClient {
     };
   }
 
+  private async sendSoapRequest(url: string, bodyXml: string): Promise<string> {
+    const timeoutMs = this.configService.get<number>('SRI_TIMEOUT_MS', 15000);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+          SOAPAction: '""',
+        },
+        body: bodyXml,
+        signal: controller.signal,
+      });
+
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        // Verificar si es un SOAP Fault
+        if (responseText.includes('Fault')) {
+          const parsed = await parseStringPromise(responseText, {
+            explicitArray: false,
+            ignoreAttrs: true,
+          }).catch(() => null);
+          const fault =
+            parsed?.['soap:Envelope']?.['soap:Body']?.['soap:Fault'] ||
+            parsed?.['soap:Envelope']?.['soap:Body']?.Fault;
+          const faultString = fault?.faultstring || response.statusText;
+          throw new Error(`SRI SOAP Fault: ${faultString}`);
+        }
+        throw new Error(
+          `Error en comunicación con el SRI (HTTP ${response.status}): ${response.statusText}`,
+        );
+      }
+
+      return responseText;
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error(
+          `Timeout de comunicación con el SRI tras ${timeoutMs}ms`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   private parseRecepcionResponse(response: any): SriRecepcionResponse {
+    let comprobantes = response?.comprobantes;
+    if (comprobantes && !Array.isArray(comprobantes?.comprobante)) {
+      if (comprobantes.comprobante) {
+        comprobantes = {
+          comprobante: [comprobantes.comprobante],
+        };
+      }
+    }
+
+    if (comprobantes?.comprobante) {
+      for (const comp of comprobantes.comprobante) {
+        if (comp.mensajes && !Array.isArray(comp.mensajes.mensaje)) {
+          comp.mensajes.mensaje = comp.mensajes.mensaje
+            ? [comp.mensajes.mensaje]
+            : [];
+        }
+      }
+    }
+
     return {
       estado: response?.estado || 'DEVUELTA',
-      comprobantes: response?.comprobantes,
+      comprobantes,
     };
   }
 
   private parseAutorizacionResponse(response: any): SriAutorizacionResponse {
+    let autorizaciones = response?.autorizaciones;
+    if (autorizaciones && !Array.isArray(autorizaciones?.autorizacion)) {
+      if (autorizaciones.autorizacion) {
+        autorizaciones = {
+          autorizacion: [autorizaciones.autorizacion],
+        };
+      }
+    }
+
+    if (autorizaciones?.autorizacion) {
+      for (const auth of autorizaciones.autorizacion) {
+        if (auth.mensajes && !Array.isArray(auth.mensajes.mensaje)) {
+          auth.mensajes.mensaje = auth.mensajes.mensaje
+            ? [auth.mensajes.mensaje]
+            : [];
+        }
+      }
+    }
+
     return {
       claveAccesoConsultada: response?.claveAccesoConsultada || '',
-      numeroComprobantes: response?.numeroComprobantes || '0',
-      autorizaciones: response?.autorizaciones,
+      numeroComprobantes: String(response?.numeroComprobantes || '0'),
+      autorizaciones,
     };
   }
 
