@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { parsePKCS12, X509Certificate } from 'node:crypto';
+import { parsePKCS12 } from 'node:crypto';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as QRCode from 'qrcode';
 import { SignPdf } from '@signpdf/signpdf';
@@ -15,6 +15,10 @@ import { EmisorRepository } from '../../emisores/domain/repositories/emisor.repo
 import { EntityNotFoundException } from '../../../shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import {
+  parseDistinguishedName,
+  extractSigningCertificate,
+} from '../../../shared/utils/p12-certificate.util';
 
 export interface SignaturePosition {
   page?: number;
@@ -37,19 +41,6 @@ export interface CertificateInfo {
     notAfter: Date;
   };
   serialNumber: string;
-}
-
-function parseDistinguishedName(dn: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const line of dn.split('\n')) {
-    const idx = line.indexOf('=');
-    if (idx !== -1) {
-      const key = line.slice(0, idx).trim();
-      const val = line.slice(idx + 1).trim();
-      result[key] = val;
-    }
-  }
-  return result;
 }
 
 @LogContext()
@@ -110,24 +101,7 @@ export class SignatureService {
     this.logger.log('Extrayendo información del certificado P12');
 
     const p12 = parsePKCS12(p12Buffer, { passphrase: password });
-
-    let signingCert: X509Certificate | null = null;
-    const allCerts: X509Certificate[] = [];
-
-    if (p12.certificate) {
-      allCerts.push(p12.certificate);
-    }
-    if (p12.additionalCertificates) {
-      allCerts.push(...p12.additionalCertificates);
-    }
-
-    for (const cert of allCerts) {
-      if (!signingCert) {
-        signingCert = cert;
-      } else if (!cert.ca && signingCert.ca) {
-        signingCert = cert;
-      }
-    }
+    const { signingCert } = extractSigningCertificate(p12);
 
     if (!p12.privateKey || !signingCert) {
       throw new Error(

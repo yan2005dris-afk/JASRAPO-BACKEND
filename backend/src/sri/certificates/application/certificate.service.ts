@@ -12,10 +12,14 @@ import {
   readFileSync,
 } from 'fs';
 import { join, resolve, sep } from 'path';
-import { parsePKCS12, X509Certificate } from 'node:crypto';
+import { parsePKCS12 } from 'node:crypto';
 import { STORAGE_PATHS } from '../../emision/infrastructure/storage/storage-paths';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import {
+  parseDistinguishedName,
+  extractSigningCertificate,
+} from '../../../shared/utils/p12-certificate.util';
 import {
   CertificateInfo,
   ExtractedCertInfo,
@@ -23,19 +27,6 @@ import {
 } from '../domain/types/certificate.types';
 
 export * from '../domain/types/certificate.types';
-
-function parseDistinguishedName(dn: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const line of dn.split('\n')) {
-    const idx = line.indexOf('=');
-    if (idx !== -1) {
-      const key = line.slice(0, idx).trim();
-      const val = line.slice(idx + 1).trim();
-      result[key] = val;
-    }
-  }
-  return result;
-}
 
 @LogContext()
 @Injectable()
@@ -186,24 +177,7 @@ export class CertificateService {
   ): ExtractedCertInfo {
     try {
       const p12 = parsePKCS12(p12Buffer, { passphrase: password });
-
-      let signingCert: X509Certificate | null = null;
-      const allCerts: X509Certificate[] = [];
-
-      if (p12.certificate) {
-        allCerts.push(p12.certificate);
-      }
-      if (p12.additionalCertificates) {
-        allCerts.push(...p12.additionalCertificates);
-      }
-
-      for (const cert of allCerts) {
-        if (!signingCert) {
-          signingCert = cert;
-        } else if (!cert.ca && signingCert.ca) {
-          signingCert = cert;
-        }
-      }
+      const { signingCert } = extractSigningCertificate(p12);
 
       if (!signingCert) {
         throw new InvalidDomainOperationException(

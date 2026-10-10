@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { parsePKCS12, X509Certificate, createPrivateKey } from 'node:crypto';
+import { parsePKCS12, createPrivateKey } from 'node:crypto';
+import { extractSigningCertificate } from '../../../../shared/utils/p12-certificate.util';
 import { Crypto } from '@peculiar/webcrypto';
 import * as xadesjs from 'xadesjs';
 import * as xmlCore from 'xml-core';
@@ -119,28 +120,7 @@ export class XmlSignerService implements OnModuleInit {
     this.logger.log('Procesando certificado P12 desde Buffer');
 
     const p12 = parsePKCS12(p12Buffer, { passphrase: password });
-
-    let signingCert: X509Certificate | null = null;
-    const chainCerts: X509Certificate[] = [];
-    const allCerts: X509Certificate[] = [];
-
-    if (p12.certificate) {
-      allCerts.push(p12.certificate);
-    }
-    if (p12.additionalCertificates) {
-      allCerts.push(...p12.additionalCertificates);
-    }
-
-    for (const cert of allCerts) {
-      if (!signingCert) {
-        signingCert = cert;
-      } else if (!cert.ca && signingCert.ca) {
-        chainCerts.push(signingCert);
-        signingCert = cert;
-      } else {
-        chainCerts.push(cert);
-      }
-    }
+    const { signingCert, chainCerts } = extractSigningCertificate(p12);
 
     if (!p12.privateKey || !signingCert) {
       throw new Error(
@@ -387,24 +367,7 @@ export class XmlSignerService implements OnModuleInit {
 
     // Process P12 certificate
     const p12 = parsePKCS12(p12Buffer, { passphrase: password });
-
-    let signingCert: X509Certificate | null = null;
-    const allCerts: X509Certificate[] = [];
-
-    if (p12.certificate) {
-      allCerts.push(p12.certificate);
-    }
-    if (p12.additionalCertificates) {
-      allCerts.push(...p12.additionalCertificates);
-    }
-
-    for (const cert of allCerts) {
-      if (!signingCert) {
-        signingCert = cert;
-      } else if (!cert.ca && signingCert.ca) {
-        signingCert = cert;
-      }
-    }
+    const { signingCert } = extractSigningCertificate(p12);
 
     if (!p12.privateKey || !signingCert) {
       throw new Error(

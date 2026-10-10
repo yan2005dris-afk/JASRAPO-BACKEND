@@ -10,6 +10,7 @@ import type {
   EmisorResponseDto,
 } from '../interfaces/dto/emisor.dto';
 import { parsePKCS12 } from 'node:crypto';
+import { extractSigningCertificate } from '../../../shared/utils/p12-certificate.util';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
 import { EmisorRepository } from '../domain/repositories/emisor.repository';
 import { EmisorRecord } from '../../domain/interfaces/repository.interface';
@@ -267,14 +268,14 @@ export class EmisoresService {
     password: string,
   ): { validoHasta: Date; sujeto: string } {
     const p12 = parsePKCS12(p12Buffer, { passphrase: password });
+    const { signingCert } = extractSigningCertificate(p12);
 
-    const cert = p12.certificate;
-    if (!cert) {
+    if (!signingCert) {
       throw new Error('No se encontró certificado en el archivo P12');
     }
 
-    const validoHasta = new Date(cert.validTo);
-    const sujeto = cert.subject
+    const validoHasta = new Date(signingCert.validTo);
+    const sujeto = signingCert.subject
       .split('\n')
       .map((line) => line.trim())
       .filter(Boolean)
