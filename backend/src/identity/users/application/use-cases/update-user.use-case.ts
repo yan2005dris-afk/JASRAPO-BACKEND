@@ -8,8 +8,8 @@ import type {
 import { UpdateUserDto } from '../../interfaces/dto/update-user.dto';
 import { UpdateUserPermissionsUseCase } from './update-user-permissions.use-case';
 import { GetUserDetailUseCase } from './get-user-detail.use-case';
-import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
-import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
+import { ValidationUtil } from 'src/common/utils/validation.util';
+import { PhoneUtil } from 'src/common/utils/phone.util';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import {
   uploadAvatar,

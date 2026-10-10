@@ -33,7 +33,7 @@ import type { EmissionOutcome } from '../../application/services/sri-emission-di
 import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
 import { UserRole } from '../../../../identity/auth/interfaces/dto/auth.dto';
-import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import { MAX_UPLOAD_SIZE_BYTES } from '../../../../infrastructure/config/app.constants';

@@ -3,11 +3,10 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Logger,
 } from '@nestjs/common';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { Request, Response } from 'express';
-import { AuditService } from '../../audit/audit.service';
+import { AuditService } from '../../infrastructure/audit/audit.service';
 
 interface RequestUser {
   sub?: number;
@@ -35,8 +34,6 @@ type RequestWithEvidence = Request & {
  */
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(AuditInterceptor.name);
-
   // Métodos HTTP que generan registro de auditoría
   private readonly AUDITABLE_METHODS = new Set([
     'POST',

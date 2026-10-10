@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { existsSync, readdirSync, statSync, unlinkSync, mkdirSync } from 'fs';
 import { join, extname, parse } from 'path';
-import { formatFileSize } from '../../../../infrastructure/common/utils/file.utils';
+import { formatFileSize } from 'src/shared/utils/file.utils';
 import { STORAGE_PATHS } from './storage-paths';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';

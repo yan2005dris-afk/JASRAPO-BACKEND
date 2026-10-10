@@ -19,7 +19,7 @@ import {
   DetalleAdicionalDto,
 } from './common.dto';
 import { Ambiente, TipoEmision } from '../../domain/constants/sri.enums';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 
 /**
  * Detalle de un producto/servicio en la nota de crédito

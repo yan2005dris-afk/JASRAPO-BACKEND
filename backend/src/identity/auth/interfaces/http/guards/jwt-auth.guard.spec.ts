@@ -3,8 +3,8 @@ import { UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Observable } from 'rxjs';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;

@@ -9,7 +9,7 @@ import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
-import { uploadEvidence } from 'src/infrastructure/common/utils/evidence-upload.util';
+import { uploadEvidence } from 'src/infrastructure/storage/evidence-upload.util';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import {
   EstadoNovedad,

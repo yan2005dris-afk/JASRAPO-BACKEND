@@ -10,7 +10,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import { MeterService } from '../../application/meter.service';
 import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
@@ -29,7 +29,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { ExportMeterDto } from '../dto/export-meter.dto';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';

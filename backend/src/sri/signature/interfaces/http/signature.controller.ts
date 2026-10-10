@@ -14,7 +14,7 @@ import { InvalidDomainOperationException } from '../../../../shared/domain/excep
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 
 @LogContext()
 @ApiTags('[SRI] Firma (XAdES-BES)')

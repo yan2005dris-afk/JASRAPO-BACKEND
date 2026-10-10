@@ -7,13 +7,13 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
-import { PrismaReadingRepository } from '../../../src/metering/readings/infrastructure/repositories/prisma-reading.repository';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { PrismaReadingRepository } from 'src/metering/readings/infrastructure/repositories/prisma-reading.repository';
 import {
   EstadoPeriodo,
   EstadoLectura,
   EstadoMedidor,
-} from '../../../src/shared/enums';
+} from 'src/shared/enums';
 
 void describe(
   'PrismaReadingRepository (integration)',

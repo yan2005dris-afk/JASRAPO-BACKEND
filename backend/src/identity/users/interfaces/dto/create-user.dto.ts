@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 import { UserResponseDto } from './user-response.dto';
 import type { UserAvatarInput } from '../../domain/types/user.types';
 

@@ -6,16 +6,16 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
-import { PrismaContractRepository } from '../../../src/operations/contracts/infrastructure/repositories/prisma-contract.repository';
-import { ContractGuideGeneratorService } from '../../../src/operations/contracts/infrastructure/services/contract-guide-generator.service';
-import { CreateContractUseCase } from '../../../src/operations/contracts/application/use-cases/create-contract.use-case';
-import { UpdateContractUseCase } from '../../../src/operations/contracts/application/use-cases/update-contract.use-case';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { PrismaContractRepository } from 'src/operations/contracts/infrastructure/repositories/prisma-contract.repository';
+import { ContractGuideGeneratorService } from 'src/operations/contracts/infrastructure/services/contract-guide-generator.service';
+import { CreateContractUseCase } from 'src/operations/contracts/application/use-cases/create-contract.use-case';
+import { UpdateContractUseCase } from 'src/operations/contracts/application/use-cases/update-contract.use-case';
 import {
   OUTSIDE_SERVICE_AREA_MESSAGE,
   SERVICE_AREA,
-} from '../../../src/operations/contracts/domain/policies/service-area.policy';
-import { DomainValidationException } from '../../../src/shared/domain/exceptions/domain.exception';
+} from 'src/operations/contracts/domain/policies/service-area.policy';
+import { DomainValidationException } from 'src/shared/domain/exceptions/domain.exception';
 
 const OLON = { latitud: -1.7982, longitud: -80.7582 };
 const OPEN_SEA = { latitud: -1.8, longitud: -80.8 };

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
-import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
-import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
+import { ValidationUtil } from 'src/common/utils/validation.util';
+import { PhoneUtil } from 'src/common/utils/phone.util';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { UserRow } from '../../domain/types/user.types';

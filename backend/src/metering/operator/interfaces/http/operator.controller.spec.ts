@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { OperatorController } from './operator.controller';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
-import { PERMISSION_KEY } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { PERMISSION_KEY } from 'src/common/decorators/require-permission.decorator';
 jest.mock('../../application/reading-upload.helper', () => ({
   uploadReadingPhoto: jest.fn().mockResolvedValue('readings/deterministic.jpg'),
   rollbackReadingPhoto: jest.fn().mockResolvedValue(undefined),

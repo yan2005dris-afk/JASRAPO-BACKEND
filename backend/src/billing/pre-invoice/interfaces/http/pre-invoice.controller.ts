@@ -18,7 +18,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { PreInvoiceService } from '../../application/pre-invoice.service';

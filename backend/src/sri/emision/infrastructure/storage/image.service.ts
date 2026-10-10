@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { extname, join, resolve, sep } from 'path';
-import { formatFileSize } from '../../../../infrastructure/common/utils/file.utils';
+import { formatFileSize } from 'src/shared/utils/file.utils';
 import { STORAGE_PATHS } from './storage-paths';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';

@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CatalogoValidatorService } from '../../infrastructure/xml/catalogo-validator.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
-import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 
 @LogContext()
 @ApiTags('[SRI] Catálogos')

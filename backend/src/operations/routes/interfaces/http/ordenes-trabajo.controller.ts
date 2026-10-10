@@ -1,7 +1,7 @@
 import { Controller, Patch, Param, Body } from '@nestjs/common';
 import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
-import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -10,7 +10,7 @@ import {
   ApiParam,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
 import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';

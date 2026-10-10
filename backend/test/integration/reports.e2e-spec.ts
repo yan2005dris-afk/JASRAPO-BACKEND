@@ -8,18 +8,18 @@ jest.mock('puppeteer', () => ({}));
 jest.mock('pg-boss', () => ({
   PgBoss: jest.fn(),
 }));
-import { AccountStatementReportDefinition } from '../../src/reports/application/definitions/account-statement-report.definition';
-import { ClientsListReportDefinition } from '../../src/reports/application/definitions/clients-list-report.definition';
-import { ConnectionHistoryReportDefinition } from '../../src/reports/application/definitions/connection-history-report.definition';
-import { OverdueAccountsReportDefinition } from '../../src/reports/application/definitions/overdue-accounts-report.definition';
-import { PaymentAgreementReportDefinition } from '../../src/reports/application/definitions/payment-agreement-report.definition';
-import { PaymentsReportDefinition } from '../../src/reports/application/definitions/payments-report.definition';
-import { ReportStyleDispatcher } from '../../src/reports/application/report-style.dispatcher';
-import { SendReportByEmailUseCase } from '../../src/reports/application/use-cases/send-report-by-email.use-case';
-import { ReportsController } from '../../src/reports/interfaces/http/reports.controller';
-import { JwtAuthGuard } from '../../src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../src/infrastructure/common/guards/permissions.guard';
-import { LoggerService } from '../../src/infrastructure/observability/logger/logger.service';
+import { AccountStatementReportDefinition } from 'src/reports/application/definitions/account-statement-report.definition';
+import { ClientsListReportDefinition } from 'src/reports/application/definitions/clients-list-report.definition';
+import { ConnectionHistoryReportDefinition } from 'src/reports/application/definitions/connection-history-report.definition';
+import { OverdueAccountsReportDefinition } from 'src/reports/application/definitions/overdue-accounts-report.definition';
+import { PaymentAgreementReportDefinition } from 'src/reports/application/definitions/payment-agreement-report.definition';
+import { PaymentsReportDefinition } from 'src/reports/application/definitions/payments-report.definition';
+import { ReportStyleDispatcher } from 'src/reports/application/report-style.dispatcher';
+import { SendReportByEmailUseCase } from 'src/reports/application/use-cases/send-report-by-email.use-case';
+import { ReportsController } from 'src/reports/interfaces/http/reports.controller';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 const FAKE_PDF = Buffer.from('%PDF-1.4\n%fake\n%%EOF');
 const VALID_TOKEN = 'Bearer valid-test-token';

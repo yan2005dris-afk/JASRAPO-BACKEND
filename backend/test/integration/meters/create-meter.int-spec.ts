@@ -14,14 +14,14 @@ import {
   mock,
 } from 'node:test';
 import type { ConfigService } from '@nestjs/config';
-import { Prisma, PrismaClient } from '../../../src/generated/prisma/client';
-import { EstadoMedidor } from '../../../src/shared/enums';
-import { CreateMeterUseCase } from '../../../src/metering/meters/application/use-cases/create-meter.use-case';
-import { PrismaMeterRepository } from '../../../src/metering/meters/infrastructure/repositories/prisma-meter.repository';
-import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
-import type { LoggerService } from '../../../src/infrastructure/observability/logger/logger.service';
-import { EntityAlreadyExistsException } from '../../../src/shared/domain/exceptions/domain.exception';
-import type { MeterEntity } from '../../../src/metering/meters/domain/entities/meter.entity';
+import { Prisma, PrismaClient } from 'src/generated/prisma/client';
+import { EstadoMedidor } from 'src/shared/enums';
+import { CreateMeterUseCase } from 'src/metering/meters/application/use-cases/create-meter.use-case';
+import { PrismaMeterRepository } from 'src/metering/meters/infrastructure/repositories/prisma-meter.repository';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
+import type { MeterEntity } from 'src/metering/meters/domain/entities/meter.entity';
 
 void describe('CreateMeterUseCase (integration)', { timeout: 180_000 }, () => {
   let container: StartedPostgreSqlContainer;

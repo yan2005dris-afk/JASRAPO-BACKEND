@@ -5,7 +5,7 @@ import { OPERATOR_MAX_UPLOAD_BYTES } from 'src/infrastructure/config/app.constan
 import {
   validateEvidenceImage,
   type EvidenceLogger,
-} from 'src/infrastructure/common/utils/evidence-upload.util';
+} from 'src/infrastructure/storage/evidence-upload.util';
 
 export async function uploadReadingPhoto(
   file: Express.Multer.File,

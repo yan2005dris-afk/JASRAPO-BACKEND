@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
+import { IsValidDateRange } from 'src/common/decorators/is-valid-date-range.decorator';
 import { BaseReportFilterDto } from './base-report-filter.dto';
 
 export class PaymentsReportFilterDto extends BaseReportFilterDto {

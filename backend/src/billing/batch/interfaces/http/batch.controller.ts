@@ -14,7 +14,7 @@ import {
   ApiTags,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchDto } from '../dto/generate-batch.dto';
 import { BatchService } from '../../application/batch.service';

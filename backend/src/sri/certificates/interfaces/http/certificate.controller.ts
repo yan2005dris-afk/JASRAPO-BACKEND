@@ -1,6 +1,6 @@
 import { Controller, Get, Delete, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { CertificateService } from '../../application/certificate.service';
 
 @ApiTags('[SRI] Certificados')

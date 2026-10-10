@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
+import { ImageProcessorUtil } from 'src/shared/utils/image-processor.util';
 import type { StorageService } from 'src/infrastructure/storage/storage.service';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 

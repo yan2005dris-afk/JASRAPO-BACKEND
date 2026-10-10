@@ -6,10 +6,10 @@ import {
   UnlockAccountDto,
   UnlockAccountResponseDto,
 } from '../dto/unlock-account.dto';
-import type { AuthenticatedRequest } from 'src/infrastructure/common/types/auth-request.types';
+import type { AuthenticatedRequest } from 'src/common/types/auth-request.types';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { Public } from 'src/infrastructure/common/decorators/public.decorator';
-import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -25,8 +25,8 @@ import type {
   RefreshRequest,
 } from './types/auth-controller.types';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
-import { CookieValue } from 'src/infrastructure/common/decorators/cookie-value.decorator';
-import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-string.pipe';
+import { CookieValue } from 'src/common/decorators/cookie-value.decorator';
+import { RequiredStringPipe } from 'src/common/pipes/required-string.pipe';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')

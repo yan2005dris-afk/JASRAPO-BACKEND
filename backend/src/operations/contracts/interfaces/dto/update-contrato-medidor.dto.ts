@@ -1,7 +1,7 @@
 import { ContractProcedureDto } from './contract-procedure.dto';
 import { IsNumberString, IsOptional, IsString, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsNotEmptyString } from 'src/common/decorators/is-not-empty-string.decorator';
 import {
   EstadoCobranzaContrato,
   EstadoServicioContrato,

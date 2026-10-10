@@ -7,7 +7,7 @@ import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { TipoAnomalia } from 'src/shared/enums';
 import { workOrderNoveltyRow } from '../../__test-utils__/work-order-novelty-row.factory';
-import * as evidenceUpload from 'src/infrastructure/common/utils/evidence-upload.util';
+import * as evidenceUpload from 'src/infrastructure/storage/evidence-upload.util';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 
 describe('CreateWorkOrderNoveltyUseCase', () => {

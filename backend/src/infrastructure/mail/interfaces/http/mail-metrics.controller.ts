@@ -7,7 +7,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { PrismaService } from '../../../database/prisma.service';
-import { RequiredPermission } from '../../../common/decorators/require-permission.decorator';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 
 @ApiTags('[Mail] Monitoreo de Correos')
 @ApiBearerAuth()

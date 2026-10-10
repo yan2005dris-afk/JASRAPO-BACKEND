@@ -9,7 +9,7 @@ import { JwtStrategy } from './interfaces/http/strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { RefreshTokenStrategy } from './interfaces/http/strategies/refresh.strategy';
 import { JwtAuthGuard } from './interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../infrastructure/common/guards/permissions.guard';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { RegisterUseCase } from './application/use-cases/register.use-case';
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { LoginUseCase } from './application/use-cases/login.use-case';

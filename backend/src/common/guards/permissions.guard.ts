@@ -3,7 +3,6 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
-  Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
@@ -15,12 +14,14 @@ import type {
   AuthPermission,
   AuthenticatedRequest,
 } from '../types/auth-request.types';
+import { LoggerService } from '../../infrastructure/observability/logger/logger.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  private readonly logger = new Logger(PermissionsGuard.name);
-
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly logger: LoggerService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [

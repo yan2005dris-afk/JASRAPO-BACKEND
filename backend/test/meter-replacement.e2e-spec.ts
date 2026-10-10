@@ -3,15 +3,15 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { v4 as uuidv4 } from 'uuid';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/infrastructure/database/prisma.service';
+import { AppModule } from 'src/app.module';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { beforeAllHook, isE2E } from './setup';
 import {
   MotivoReemplazoMedidor,
   ResponsabilidadDano,
   TratamientoSaliente,
   TratamientoEntrante,
-} from '../src/shared/enums';
+} from 'src/shared/enums';
 
 describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
   let app: INestApplication<App>;
