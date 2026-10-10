@@ -5,6 +5,7 @@ import { SectorModule } from './sectors/sector.module';
 import { ClientModule } from './clients/client.module';
 import { RoutesModule } from './routes/routes.module';
 import { WorkOrderNoveltiesModule } from './work-order-novelties/work-order-novelties.module';
+import { OperatorModule } from './operator/operator.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { WorkOrderNoveltiesModule } from './work-order-novelties/work-order-nove
     SectorModule,
     RoutesModule,
     WorkOrderNoveltiesModule,
+    OperatorModule,
   ],
   exports: [
     ClientModule,
@@ -22,6 +24,7 @@ import { WorkOrderNoveltiesModule } from './work-order-novelties/work-order-nove
     SectorModule,
     RoutesModule,
     WorkOrderNoveltiesModule,
+    OperatorModule,
   ],
 })
 export class OperationsModule {}
