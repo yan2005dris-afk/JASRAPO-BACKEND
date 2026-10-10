@@ -48,5 +48,6 @@ Fuera de alcance: `backend/src/generated/**` (Prisma, no tocar), `*.spec.ts` sal
 - 2026-10-10: `5dd95de` P0 paginación (tsc 165==165, pagination.util.spec 14/14).
 - 2026-10-10: `fbbf8e7` P1 any de alto valor (tsc 165→161, 4 specs `{email}` corregidos; suites tocadas 79/79 verde).
 - 2026-10-10: `df29b1a` novelties a repo infra (tsc 161==161; operator 12 suites/71 tests verde).
-- `any` restantes en src no-generado no-spec: 78 (de 119). Quedan: `tx: any` documentado (SC-187), `reading.mapper raw: any` (mapper defensivo, P2), validators PipeTransform/class-validator (contrato externo exige `any`), soft-delete middleware (glue de Prisma), specs con mocks `any` (~40, chore aparte).
+- 2026-10-10: `357a9f` discounts `tx` tipado con `TransactionContext` (cierra NOTA SC-187; inversión total queda para SC-188).
+- `any` restantes en src no-generado no-spec: 76 (de 119). Quedan: `reading.mapper raw: any` (mapper defensivo, P2), validators PipeTransform/class-validator (contrato externo exige `any`), soft-delete middleware (glue de Prisma), specs con mocks `any` (~40, chore aparte).
 - `unknown` en src: uso correcto (catch, `as unknown as`, narrowing). No se toca.
