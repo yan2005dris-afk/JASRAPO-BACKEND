@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 
 export class FindAllPreInvoicesDto extends PaginationDto {
   @ApiPropertyOptional({

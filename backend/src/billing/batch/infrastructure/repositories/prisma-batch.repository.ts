@@ -10,8 +10,8 @@ import type {
 import {
   paginate,
   type PaginateOptions,
-} from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+} from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class PrismaBatchRepository implements BatchRepository {
@@ -85,7 +85,9 @@ export class PrismaBatchRepository implements BatchRepository {
   async generate(data: GenerateBatchData): Promise<bigint | null> {
     const currentMonth = new Date().getMonth() + 1;
     const mes = data.mes ?? currentMonth;
-    const result = await this.prisma.$queryRawUnsafe<any[]>(
+    const result = await this.prisma.$queryRawUnsafe<
+      Array<{ loteId: number | string | bigint | null }>
+    >(
       `SELECT generar_prefacturas_lote($1, $2, $3, $4, $5) as "loteId"`,
       data.periodoId,
       data.comunidadId ?? null,

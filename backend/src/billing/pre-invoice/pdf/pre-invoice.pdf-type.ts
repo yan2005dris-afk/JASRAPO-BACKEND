@@ -34,16 +34,23 @@ export const PreInvoicePdfDocumentType: PdfDocumentType = {
           fechaVencimiento:
             raw.periodo?.fechaVencimiento ?? raw.fechaVencimiento ?? '',
         },
-        detalles: (raw.detalles ?? raw.prefacturaDetalle ?? []).map(
-          (d: any) => ({
-            descripcion: d.descripcion,
-            cantidad: d.cantidad,
-            precioUnitario: d.precioUnitario,
-            subtotal: d.subtotal,
-            iva: d.iva,
-            total: d.total,
-          }),
-        ),
+        detalles: (
+          (raw.detalles ?? raw.prefacturaDetalle ?? []) as Array<{
+            descripcion: unknown;
+            cantidad: unknown;
+            precioUnitario: unknown;
+            subtotal: unknown;
+            iva: unknown;
+            total: unknown;
+          }>
+        ).map((d) => ({
+          descripcion: d.descripcion,
+          cantidad: d.cantidad,
+          precioUnitario: d.precioUnitario,
+          subtotal: d.subtotal,
+          iva: d.iva,
+          total: d.total,
+        })),
       },
     };
   },

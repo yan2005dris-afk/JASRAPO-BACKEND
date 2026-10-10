@@ -31,6 +31,11 @@ import type {
   SyncPage,
   SyncChangePage,
 } from '../../domain/repositories/repository-types';
+import type {
+  OperatorNoveltyFilters,
+  OperatorNoveltyRow,
+} from '../../domain/types/operator-novelty.types';
+import { operatorNoveltyInclude } from './operator-novelty.include';
 
 const routeOperarioSelect = {
   usuarioId: true,
@@ -237,7 +242,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     after: SyncCursorPosition | null,
     limit: number,
   ): Promise<SyncPage<OperatorRoute>> {
-    const where: any = {
+    const where: Prisma.RutasWhereInput = {
       operarioId,
       periodoId,
       estado: {
@@ -262,7 +267,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       }),
       this.prisma.rutas.count({ where }),
     ]);
-    const pageItems = items.slice(0, limit).map((route: any) => ({
+    const pageItems = items.slice(0, limit).map((route) => ({
       ...route,
       tipoRuta: route.tipoActividad.codigo,
       comunidadNombre: route.comunidad?.nombre ?? null,
@@ -281,7 +286,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     after: SyncCursorPosition | null,
     limit: number,
   ): Promise<SyncPage<OperatorWorkOrder>> {
-    const where: any = {
+    const where: Prisma.OrdenesTrabajoWhereInput = {
       rutaId: { in: routeIds },
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
@@ -334,7 +339,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     after: SyncCursorPosition | null,
     limit: number,
   ): Promise<SyncPage<MeterWithContractDetail>> {
-    const where: any = {
+    const where: Prisma.MedidoresWhereInput = {
       estado: EstadoMedidor.INSTALADO,
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
@@ -403,7 +408,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     after: SyncCursorPosition | null,
     limit: number,
   ): Promise<SyncPage<ReadingWithContractDetail>> {
-    const where: any = {
+    const where: Prisma.LecturasWhereInput = {
       periodoId,
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
@@ -471,14 +476,14 @@ export class PrismaOperatorRepository extends OperatorRepository {
       }),
       this.prisma.lecturas.count({ where }),
     ]);
-    const mapped = items.slice(0, limit).map((reading: any) => ({
+    const mapped = items.slice(0, limit).map((reading) => ({
       ...reading,
       evidenciaFotoUrl:
-        reading.ordenesTrabajo?.find((o: any) => o.evidenciaFotoUrl)
+        reading.ordenesTrabajo?.find((o) => o.evidenciaFotoUrl)
           ?.evidenciaFotoUrl ?? null,
     }));
     return this.page(
-      mapped as ReadingWithContractDetail[],
+      mapped as unknown as ReadingWithContractDetail[],
       total,
       items.length > limit,
       'lecturaId',
@@ -493,7 +498,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     after: SyncCursorPosition | null,
     limit: number,
   ): Promise<SyncPage<ReadingWithAnomalies>> {
-    const where: any = {
+    const where: Prisma.LecturasWhereInput = {
       periodoId,
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
@@ -613,7 +618,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       take: limit + 1,
     });
     const hasMore = rows.length > limit;
-    const items = rows.slice(0, limit).map((row: any) => {
+    const items = rows.slice(0, limit).map((row) => {
       const payload = row.payload as { data?: unknown };
       const data = payload?.data;
       return {
@@ -634,7 +639,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
   }
 
-  private keyset(after: SyncCursorPosition, id: string): any {
+  private keyset(
+    after: SyncCursorPosition,
+    id: string,
+  ): { OR: Array<Record<string, unknown>> } {
     return {
       OR: [
         { updatedAt: { gt: after.updatedAt } },
@@ -649,13 +657,17 @@ export class PrismaOperatorRepository extends OperatorRepository {
     hasMore: boolean,
     id: string,
   ): SyncPage<T> {
-    const last: any = items.at(-1);
+    const last = items.at(-1) as unknown as
+      | { updatedAt: Date; [key: string]: unknown }
+      | undefined;
     return {
       items,
       total,
       hasMore,
       nextPosition:
-        hasMore && last ? { updatedAt: last.updatedAt, id: last[id] } : null,
+        hasMore && last
+          ? { updatedAt: last.updatedAt, id: last[id] as bigint }
+          : null,
     };
   }
 
@@ -738,7 +750,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       contrato: {
         latitud: Prisma.Decimal | null;
         longitud: Prisma.Decimal | null;
-        [key: string]: any;
+        [key: string]: unknown;
       };
       medidor: { medidorId: bigint; serie: string } | null;
       ruta?: {
@@ -747,8 +759,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
     },
   >(order: T, routeTipoActividad?: string) {
     const { latitud, longitud, ...contratoRest } = order.contrato;
+    const legacyTipoActividad = (
+      order as unknown as { tipoActividad?: unknown }
+    ).tipoActividad;
     const tipoActividad =
-      (order as any).tipoActividad ??
+      (typeof legacyTipoActividad === 'string' ? legacyTipoActividad : null) ??
       order.ruta?.tipoActividad?.codigo ??
       routeTipoActividad ??
       'LECTURA';
@@ -772,8 +787,12 @@ export class PrismaOperatorRepository extends OperatorRepository {
   private toOperatorRoute(
     route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
   ): OperatorRoute {
+    const legacyTipoRuta = (route as unknown as { tipoRuta?: unknown })
+      .tipoRuta;
     const routeTipoActividad =
-      route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA';
+      route.tipoActividad?.codigo ??
+      (typeof legacyTipoRuta === 'string' ? legacyTipoRuta : null) ??
+      'LECTURA';
 
     const ordenesTrabajo = route.ordenesTrabajo.map((order) =>
       this.toOperatorWorkOrder(order, routeTipoActividad),
@@ -798,8 +817,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           longitud,
           serie: order.medidor?.serie,
           clienteNombre,
-          tipoActividad:
-            route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
+          tipoActividad: routeTipoActividad,
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -808,8 +826,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
-      tipoRuta:
-        route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
+      tipoRuta: routeTipoActividad,
       comunidadNombre: route.comunidad?.nombre ?? undefined,
       sectorNombre: route.sector?.nombre ?? undefined,
       ordenesTrabajo,
@@ -821,20 +838,60 @@ export class PrismaOperatorRepository extends OperatorRepository {
     comunidadId: number,
     sectorId: number | null,
   ): Promise<OperatorUser[]> {
-    const where: any = {
+    const where: Prisma.UsuariosWhereInput = {
       rutas: {
         some: {
           comunidadId,
           deletedAt: null,
+          ...(sectorId !== null && sectorId !== undefined ? { sectorId } : {}),
         },
       },
     };
 
-    if (sectorId !== null && sectorId !== undefined) {
-      where.rutas.some.sectorId = sectorId;
-    }
-
     return this.prisma.usuarios.findMany({ where });
+  }
+
+  async findOperatorNovelties(params: {
+    operarioId: number;
+    page: number;
+    limit: number;
+    filters?: OperatorNoveltyFilters;
+  }): Promise<{ data: OperatorNoveltyRow[]; total: number }> {
+    const { operarioId, page, limit, filters } = params;
+    const where: Prisma.NovedadOrdenTrabajoWhereInput = {
+      deletedAt: null,
+      ordenTrabajo: { ruta: { operarioId } },
+      ...(filters?.lecturaId ? { lecturaId: filters.lecturaId } : {}),
+      ...(filters?.ordenTrabajoId
+        ? { ordenTrabajoId: filters.ordenTrabajoId }
+        : {}),
+      ...(filters?.estado ? { estado: filters.estado as EstadoNovedad } : {}),
+    };
+    const [data, total] = await Promise.all([
+      this.prisma.novedadOrdenTrabajo.findMany({
+        where,
+        include: operatorNoveltyInclude,
+        orderBy: [{ createdAt: 'desc' }, { novedadId: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.novedadOrdenTrabajo.count({ where }),
+    ]);
+    return { data, total };
+  }
+
+  async findOperatorNovelty(
+    operarioId: number,
+    novedadId: bigint,
+  ): Promise<OperatorNoveltyRow | null> {
+    return this.prisma.novedadOrdenTrabajo.findFirst({
+      where: {
+        deletedAt: null,
+        ordenTrabajo: { ruta: { operarioId } },
+        novedadId,
+      },
+      include: operatorNoveltyInclude,
+    });
   }
 
   async findMeterContractLocation(medidorId: bigint): Promise<{

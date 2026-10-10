@@ -3,8 +3,8 @@ import type {
   PreInvoiceFilters,
   UpdatePreInvoiceStateData,
 } from '../types/pre-invoice.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 export abstract class PreInvoiceRepository {
   abstract paginate(

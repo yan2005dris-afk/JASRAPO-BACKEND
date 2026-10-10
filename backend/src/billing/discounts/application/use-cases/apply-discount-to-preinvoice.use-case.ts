@@ -48,10 +48,10 @@ export class ApplyDiscountToPreinvoiceUseCase {
       //    Si no → fallback al detalle de Cargo Fijo (codigoSri '002').
       const targetDetalle = catalogo.rubroId
         ? prefactura.prefacturaDetalle.find(
-            (d: any) => d.rubroId === catalogo.rubroId,
+            (d) => d.rubroId === catalogo.rubroId,
           )
         : prefactura.prefacturaDetalle.find(
-            (d: any) => d.rubro?.codigoSri === '002',
+            (d) => d.rubro?.codigoSri === '002',
           );
 
       if (!targetDetalle) {

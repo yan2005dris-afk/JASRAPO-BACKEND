@@ -18,11 +18,11 @@ import type {
 import { ContractState } from '../../domain/contract-state';
 import { ensureContractWorkOrder } from '../contract-work-order';
 import { ContractGuideGeneratorService } from '../services/contract-guide-generator.service';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import {
   paginate,
   PaginateOptions,
-} from 'src/infrastructure/common/utils/pagination.util';
+} from 'src/shared/pagination/pagination.util';
 import { contractInclude, type ContractRow } from './contract.include';
 
 export const contractDefaultInclude = contractInclude;

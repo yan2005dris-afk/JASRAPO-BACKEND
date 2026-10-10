@@ -16,8 +16,8 @@ import { ordenTrabajoInclude, type OrdenTrabajoRow } from './route.include';
 import {
   paginate,
   PaginateOptions,
-} from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+} from 'src/shared/pagination/pagination.util';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type {
   OrdenTrabajoFilters,
   OrdenTrabajoKpis,

@@ -13,7 +13,7 @@ import { SectorService } from '../../application/sector.service';
 import { CreateSectorDto } from '../dto/create-sector.dto';
 import { UpdateSectorDto } from '../dto/update-sector.dto';
 import { SectorResponseDto } from '../dto/sector-response.dto';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -24,9 +24,9 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('sectors')
 @ApiBearerAuth()

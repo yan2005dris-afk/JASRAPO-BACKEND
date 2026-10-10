@@ -3,9 +3,9 @@ import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.
 import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { OrdenTrabajoFilters } from '../../domain/types/orden-trabajo.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
 
 export interface FindOrdenesByRutaParams {
   rutaId: bigint;

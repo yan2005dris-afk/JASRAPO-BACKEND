@@ -1,16 +1,22 @@
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type {
+  PaginatedResult,
+  PaginateOptions,
+  PaginationOffset,
+} from 'src/shared/pagination/pagination.types';
 
-export interface PaginationParams {
-  skip: number;
-  take: number;
-  page: number;
-}
+/**
+ * @deprecated Importar `PaginationOffset` desde
+ * `src/shared/pagination/pagination.types`. Se mantiene como alias
+ * para no romper imports existentes.
+ */
+export type PaginationParams = PaginationOffset;
+export type { PaginateOptions };
 
 function toFiniteNumberOr(value: number | undefined, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
-export function getPagination(page = 1, limit = 10): PaginationParams {
+export function getPagination(page = 1, limit = 10): PaginationOffset {
   const safePage = Math.max(1, Math.floor(toFiniteNumberOr(page, 1)));
   const safeLimit = Math.min(
     50,
@@ -23,16 +29,19 @@ export function getPagination(page = 1, limit = 10): PaginationParams {
   };
 }
 
-export interface PaginateOptions {
-  page?: number;
-  limit?: number;
-  skip?: number;
-  take?: number;
+export interface PaginableModel<K> {
+  count(args?: { where?: unknown }): Promise<number>;
+  findMany(args?: Record<string, unknown>): Promise<K[]>;
 }
 
+type InternalPaginableModel<K> = {
+  count: (args: { where?: unknown }) => Promise<number>;
+  findMany: (args: Record<string, unknown>) => Promise<K[]>;
+};
+
 export async function paginate<K>(
-  model: any,
-  args: any = { where: {} },
+  model: unknown,
+  args: { where?: unknown } & Record<string, unknown> = { where: {} },
   options: PaginateOptions = { page: 1, limit: 10 },
 ): Promise<PaginatedResult<K>> {
   const page = Math.max(1, Math.floor(toFiniteNumberOr(options.page, 1)));
@@ -42,9 +51,12 @@ export async function paginate<K>(
   );
 
   const skip = (page - 1) * perPage;
+  // Prisma delegates aceptan `{ where, ... }`; se castea desde `unknown`
+  // para no exponer `any` en la firma pública.
+  const countable = model as InternalPaginableModel<K>;
   const [total, data] = await Promise.all([
-    model.count({ where: args.where }),
-    model.findMany({
+    countable.count({ where: args.where }),
+    countable.findMany({
       ...args,
       take: perPage,
       skip,

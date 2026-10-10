@@ -11,6 +11,15 @@ import {
   InvitationAlreadyUsedException,
 } from '../domain/exceptions/invitation.exceptions';
 
+/**
+ * Datos mínimos del usuario necesarios para crear y enviar una invitación.
+ */
+export type InvitationUser = {
+  usuarioId: number;
+  email: string;
+  nombres: string | null;
+};
+
 @Injectable()
 export class InvitationService {
   constructor(
@@ -20,7 +29,10 @@ export class InvitationService {
     private readonly logger: LoggerService,
   ) {}
 
-  async createAndSendInvitation(usuario: any, invitedByUserId?: number) {
+  async createAndSendInvitation(
+    usuario: InvitationUser,
+    invitedByUserId?: number,
+  ) {
     const ttlHours = parseInt(process.env.INVITATION_TTL_HOURS || '48', 10);
     const { tokenPlain, tokenHash } = this.tokenGenerator.generate();
 

@@ -25,7 +25,7 @@ import { DiscountFilterDto } from '../dto/discount-filter.dto';
 import { DiscountResponseDto } from '../dto/discount-response.dto';
 import { ApplyDiscountToPreinvoiceDto } from '../dto/apply-discount-to-preinvoice.dto';
 import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('Descuentos')
 @ApiBearerAuth()

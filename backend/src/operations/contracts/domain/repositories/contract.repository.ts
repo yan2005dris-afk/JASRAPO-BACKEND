@@ -5,8 +5,8 @@ import type {
   ContractFilters,
   UpdateContractData,
 } from '../types/contract.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
 
 export abstract class ContractRepository {
   abstract findById(

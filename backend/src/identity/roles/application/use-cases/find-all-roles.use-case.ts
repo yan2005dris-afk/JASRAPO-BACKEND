@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { RoleRepository } from '../../domain/repositories/role.repository';
 import type { RoleRow } from '../../domain/types/role.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
+import { getPagination } from 'src/shared/pagination/pagination.util';
 
 @Injectable()
 export class FindAllRolesUseCase {

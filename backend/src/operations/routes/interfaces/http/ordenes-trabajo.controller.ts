@@ -15,7 +15,7 @@ import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
 import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';
 import { LinkLecturaDto } from '../dto/link-lectura.dto';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
 
 @ApiTags('work-orders')
 @ApiBearerAuth()

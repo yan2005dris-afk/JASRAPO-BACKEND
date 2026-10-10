@@ -23,9 +23,9 @@ import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/curren
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { PaymentsService } from '../../application/payments.service';
 import {
   ApplySaldoFavorDto,
@@ -118,7 +118,7 @@ export class PaymentsController {
   @Post('cobro-puntual')
   async createCobroPuntual(
     @Body() dto: CreateCobroPuntualDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.createCobroPuntual(
       dto,

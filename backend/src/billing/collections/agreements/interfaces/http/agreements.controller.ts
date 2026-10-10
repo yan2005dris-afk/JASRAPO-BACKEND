@@ -28,9 +28,9 @@ import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
 import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
 
 @ApiTags('agreements')

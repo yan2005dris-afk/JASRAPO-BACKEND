@@ -3,7 +3,7 @@ import { DiscountRepository } from '../../domain/repositories/discount.repositor
 import type { DiscountFilterDto } from '../../interfaces/dto/discount-filter.dto';
 import type { DiscountRow } from '../../domain/types/discount.types';
 import type { DiscountFilters } from '../../domain/types/discount.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class FindAllDiscountsUseCase {

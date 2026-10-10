@@ -11,7 +11,7 @@ import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
 import { GetDiscountRubrosUseCase } from './use-cases/get-discount-rubros.use-case';
 import type { DiscountRow } from '../domain/types/discount.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class DiscountsService {

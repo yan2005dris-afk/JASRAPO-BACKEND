@@ -3,7 +3,7 @@ import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { FilterMeterDto } from '../../interfaces/dto/filter-meter.dto';
 import { PaginatedMeterResponse } from '../../interfaces/types/paginated-meter-response.type';
 import { MeterResponseDto } from '../../interfaces/dto/meter-response.dto';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import { getPagination } from 'src/shared/pagination/pagination.util';
 import { buildMeterFilters } from '../mappers/meter-filters.mapper';
 
 @Injectable()

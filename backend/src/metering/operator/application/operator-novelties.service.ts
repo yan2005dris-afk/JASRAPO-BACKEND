@@ -1,48 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { OperatorRepository } from '../domain/repositories/operator.repository';
+import type {
+  OperatorNoveltyFilters,
+  OperatorNoveltyRow,
+} from '../domain/types/operator-novelty.types';
 import { WorkOrderNoveltyService } from 'src/operations/work-order-novelties/application/work-order-novelty.service';
 import type { UpdateWorkOrderNoveltyDto } from 'src/operations/work-order-novelties/interfaces/dto/update-work-order-novelty.dto';
 
 @Injectable()
 export class OperatorNoveltiesService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly operatorRepository: OperatorRepository,
     private readonly novelties: WorkOrderNoveltyService,
   ) {}
 
-  private readonly detail = {
-    ordenTrabajo: {
-      select: {
-        contratoId: true,
-        medidorId: true,
-        medidor: { select: { serie: true } },
-        contrato: {
-          select: {
-            numeroGuia: true,
-            direccionSuministro: true,
-            cliente: {
-              select: { nombres: true, apellidos: true, razonSocial: true },
-            },
-          },
-        },
-        ruta: {
-          select: {
-            comunidadId: true,
-            sectorId: true,
-            comunidad: { select: { nombre: true } },
-            sector: { select: { nombre: true } },
-          },
-        },
-      },
-    },
-  } as const;
-
-  private readonly visibleTo = (operarioId: number) => ({
-    deletedAt: null,
-    ordenTrabajo: { ruta: { operarioId } },
-  });
-
-  private toResponse(row: any) {
+  private toResponse(row: OperatorNoveltyRow) {
     const order = row.ordenTrabajo;
     const client = order.contrato.cliente;
     const ruta = order.ruta;
@@ -75,38 +47,24 @@ export class OperatorNoveltiesService {
     operarioId: number,
     page = 1,
     limit = 100,
-    filters?: {
-      lecturaId?: bigint;
-      ordenTrabajoId?: bigint;
-      estado?: string;
-    },
+    filters?: OperatorNoveltyFilters,
   ) {
-    const where: any = {
-      ...this.visibleTo(operarioId),
-      ...(filters?.lecturaId ? { lecturaId: filters.lecturaId } : {}),
-      ...(filters?.ordenTrabajoId
-        ? { ordenTrabajoId: filters.ordenTrabajoId }
-        : {}),
-      ...(filters?.estado ? { estado: filters.estado } : {}),
-    };
-    const [rows, total] = await Promise.all([
-      this.prisma.novedadOrdenTrabajo.findMany({
-        where,
-        include: this.detail,
-        orderBy: [{ createdAt: 'desc' }, { novedadId: 'desc' }],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.novedadOrdenTrabajo.count({ where }),
-    ]);
-    return { data: rows.map((row) => this.toResponse(row)), total };
+    const { data, total } = await this.operatorRepository.findOperatorNovelties(
+      {
+        operarioId,
+        page,
+        limit,
+        filters,
+      },
+    );
+    return { data: data.map((row) => this.toResponse(row)), total };
   }
 
   async findOne(operarioId: number, id: bigint) {
-    const row = await this.prisma.novedadOrdenTrabajo.findFirst({
-      where: { ...this.visibleTo(operarioId), novedadId: id },
-      include: this.detail,
-    });
+    const row = await this.operatorRepository.findOperatorNovelty(
+      operarioId,
+      id,
+    );
     if (!row) throw new NotFoundException(`Novedad con ID ${id} no encontrada`);
     return this.toResponse(row);
   }

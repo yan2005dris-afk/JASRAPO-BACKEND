@@ -11,6 +11,10 @@ import type {
   SyncPage,
   SyncChangePage,
 } from './repository-types';
+import type {
+  OperatorNoveltyFilters,
+  OperatorNoveltyRow,
+} from '../types/operator-novelty.types';
 
 export interface RouteData {
   rutaId?: bigint;
@@ -101,4 +105,15 @@ export abstract class OperatorRepository {
     afterSequence: bigint,
     limit: number,
   ): Promise<SyncChangePage>;
+
+  abstract findOperatorNovelties(params: {
+    operarioId: number;
+    page: number;
+    limit: number;
+    filters?: OperatorNoveltyFilters;
+  }): Promise<{ data: OperatorNoveltyRow[]; total: number }>;
+  abstract findOperatorNovelty(
+    operarioId: number,
+    novedadId: bigint,
+  ): Promise<OperatorNoveltyRow | null>;
 }

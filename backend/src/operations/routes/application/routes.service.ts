@@ -18,7 +18,7 @@ import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
 import { ExportFieldSheetPdfUseCase } from './use-cases/export-field-sheet-pdf.use-case';
 import { RouteRepository } from '../domain/repositories/route.repository';
 import type { RouteFilters } from '../domain/types/route.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class RoutesService {

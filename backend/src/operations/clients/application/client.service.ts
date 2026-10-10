@@ -9,7 +9,7 @@ import { FindOneClientUseCase } from './use-cases/find-one-client.use-case';
 import { RemoveClientUseCase } from './use-cases/remove-client.use-case';
 import { buildClientFilters } from './mappers/client-filters.mapper';
 import type { IdentificationTypeRef } from '../domain/types/client.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { ClientRow } from '../infrastructure/repositories/client.include';
 
 @Injectable()

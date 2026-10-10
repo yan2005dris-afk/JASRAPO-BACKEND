@@ -6,7 +6,7 @@ import type {
   PaginationParams,
   PaginationMeta,
   PaginatedResult,
-} from 'src/shared/domain/types/pagination.types';
+} from 'src/shared/pagination/pagination.types';
 
 export type { UserRow, UserWithPasswordAndLockoutRow };
 

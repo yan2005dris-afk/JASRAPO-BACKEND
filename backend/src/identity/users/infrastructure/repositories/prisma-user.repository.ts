@@ -15,7 +15,7 @@ import {
   UserRolePermission,
 } from '../../domain/repositories/user.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import { paginate } from 'src/infrastructure/common/utils/pagination.util';
+import { paginate } from 'src/shared/pagination/pagination.util';
 import {
   userWithRolesSelect,
   userWithPasswordAndLockoutSelect,
@@ -227,7 +227,7 @@ export class PrismaUserRepository implements UserRepository {
       deduplicatedPermissions.map((p) => p.permisoId),
     );
 
-    const run = async (innerTx: any) => {
+    const run = async (innerTx: Prisma.TransactionClient) => {
       const permissionsToRemove = [...activePermissionIds].filter(
         (id) => !newPermissionIds.has(id),
       );
@@ -251,7 +251,7 @@ export class PrismaUserRepository implements UserRepository {
         select: { permisoId: true },
       });
       const validPermissionIds = new Set(
-        validPermissions.map((p: any) => p.permisoId),
+        validPermissions.map((p) => p.permisoId),
       );
 
       const invalidIds = deduplicatedPermissions

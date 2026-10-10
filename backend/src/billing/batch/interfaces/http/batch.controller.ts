@@ -18,15 +18,15 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchDto } from '../dto/generate-batch.dto';
 import { BatchService } from '../../application/batch.service';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
 import { SendBatchEmailsUseCase } from '../../application/use-cases/send-batch-emails.use-case';
 import {
   BatchResponseDto,
   BatchGenerationResponseDto,
 } from '../dto/batch-response.dto';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('batches')
 @ApiBearerAuth()

@@ -35,10 +35,11 @@ import {
   ReadingForRouteResponseDto,
 } from '../dto/route-response.dto';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
+import type { RouteFilters } from '../../domain/types/route.types';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 
 @ApiTags('routes')
 @ApiBearerAuth()
@@ -188,7 +189,7 @@ export class RoutesController {
   async findAll(
     @Query() query: FindAllRoutesDto,
   ): Promise<PaginatedResult<RouteResponseDto>> {
-    const where: any = {};
+    const where: RouteFilters = {};
     if (query.estado) where.estado = query.estado;
     if (query.operarioId !== undefined) where.operarioId = query.operarioId;
     if (query.comunidadId !== undefined) where.comunidadId = query.comunidadId;
@@ -259,7 +260,7 @@ export class RoutesController {
   @Get(':id/pdf')
   async exportPdf(
     @Param('id', ParseBigIntPipe) id: bigint,
-    @Res() res: any,
+    @Res() res: Response,
   ): Promise<void> {
     const pdfBuffer = await this.routesService.exportPdf(id);
     res.setHeader('Content-Type', 'application/pdf');

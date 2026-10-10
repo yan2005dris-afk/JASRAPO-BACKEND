@@ -4,13 +4,13 @@ import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-ca
 import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
 import type { OrdenTrabajoRow } from '../infrastructure/repositories/route.include';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type {
   OrdenTrabajoFilters,
   UpdateOrdenEstadoData,
   LinkLecturaData,
 } from '../domain/types/orden-trabajo.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
 
 @Injectable()
 export class OrdenesTrabajoService {

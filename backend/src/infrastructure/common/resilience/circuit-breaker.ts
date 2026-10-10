@@ -15,7 +15,7 @@ export class SimpleCircuitBreaker {
     private readonly name: string,
     private readonly threshold = 5,
     private readonly cooldownMs = 30000,
-    private readonly isBusinessError?: (error: any) => boolean,
+    private readonly isBusinessError?: (error: unknown) => boolean,
   ) {
     this.logger = new Logger(`${SimpleCircuitBreaker.name}:${name}`);
   }

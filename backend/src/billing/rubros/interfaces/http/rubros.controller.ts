@@ -27,7 +27,7 @@ import {
   TarifaImpuestoResponseDto,
 } from '../dto/rubro-response.dto';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('Rubros')
 @ApiBearerAuth()

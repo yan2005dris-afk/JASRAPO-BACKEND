@@ -6,8 +6,8 @@ import type {
   PrefacturaDeudaRaw,
   PaymentAgreementReportReadModel,
 } from '../types/agreement.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 export abstract class AgreementRepository {
   abstract findById(id: bigint): Promise<AgreementRow | null>;

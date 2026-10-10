@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { getPagination } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { SectorRow } from '../../domain/types/sector.types';
 import type { SectorFilters } from '../../domain/types/sector.types';
 

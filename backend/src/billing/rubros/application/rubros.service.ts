@@ -14,7 +14,7 @@ import type {
   TarifaImpuestoInfo,
 } from '../domain/types/rubro.types';
 import type { RubroRow } from '../domain/types/rubro.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class RubrosService {

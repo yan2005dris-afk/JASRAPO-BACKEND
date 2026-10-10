@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GenerateBatchDto } from '../interfaces/dto/generate-batch.dto';
 import { BATCH_STATUS_LIST } from 'src/infrastructure/config/app.constants';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchUseCase } from './use-cases/generate-batch.use-case';
 import { FindAllBatchesUseCase } from './use-cases/find-all-batches.use-case';

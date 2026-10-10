@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { BatchRow } from '../../domain/types/batch.types';
 import type { BatchFilters } from '../../domain/types/batch.types';
 
