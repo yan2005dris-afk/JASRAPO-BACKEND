@@ -10,6 +10,7 @@ model CajaMovimiento {
   cajaSesion      CajaSesion      @relation(fields: [cajaId], references: [cajaId])
 
   @@index([cajaId])
+  @@index([creadoPor])
   @@map("caja_movimientos")
 }
 

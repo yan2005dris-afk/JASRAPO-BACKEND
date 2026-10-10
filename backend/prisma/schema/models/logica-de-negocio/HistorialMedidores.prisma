@@ -22,5 +22,6 @@ model HistorialMedidores {
 
   @@index([medidorId])
   @@index([contratoId])
+  @@index([creadoPor])
   @@map("historial_medidores")
 }
