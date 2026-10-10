@@ -3,10 +3,7 @@ import { CatalogosController } from './catalogos.controller';
 
 describe('CatalogosController', () => {
   it('protects the endpoints with catalogos read permission', () => {
-    const metadata = Reflect.getMetadata(
-      'permission',
-      CatalogosController,
-    );
+    const metadata = Reflect.getMetadata('permission', CatalogosController);
     expect(metadata).toEqual({ recurso: 'catalogos', accion: 'read' });
   });
 
