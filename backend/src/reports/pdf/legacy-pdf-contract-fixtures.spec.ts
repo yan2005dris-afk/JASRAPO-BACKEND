@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Liquid } from 'liquidjs';
-import { PaymentAgreementPdfDocumentType } from 'src/billing/collections/agreements/pdf/payment-agreement.pdf-type';
+import { PaymentAgreementPdfDocumentType } from './factories/payment-agreement.factory';
 import { projectConnectionHistoryReport } from '../application/definitions/connection-history-report.definition';
 import { projectPaymentAgreementReport } from '../application/definitions/payment-agreement-report.definition';
 import { projectPaymentsReport } from '../application/definitions/payments-report.definition';

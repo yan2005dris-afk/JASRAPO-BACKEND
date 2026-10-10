@@ -122,15 +122,8 @@ describe('PDF-03 report architecture', () => {
 
   it('pdfAdapterContainsNoBusinessCalculations', () => {
     const reportPdfSource = readTypeScriptFiles(path.join(REPORTS_ROOT, 'pdf'));
-    const agreementPdfSource = fs.readFileSync(
-      path.resolve(
-        REPORTS_ROOT,
-        '../billing/collections/agreements/pdf/payment-agreement.pdf-type.ts',
-      ),
-      'utf8',
-    );
 
-    expect(`${reportPdfSource}\n${agreementPdfSource}`).not.toMatch(
+    expect(reportPdfSource).not.toMatch(
       /\.reduce\(|Math\.(?:min|max)|\.toFixed\(|subtotalNumber|saldoAcumulado/,
     );
   });
