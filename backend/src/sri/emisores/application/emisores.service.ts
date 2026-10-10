@@ -9,7 +9,8 @@ import type {
   UpdateEmisorDto,
   EmisorResponseDto,
 } from '../interfaces/dto/emisor.dto';
-import * as forge from 'node-forge';
+import { parsePKCS12 } from 'node:crypto';
+import { extractSigningCertificate } from '../../../shared/utils/p12-certificate.util';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
 import { EmisorRepository } from '../domain/repositories/emisor.repository';
 import { EmisorRecord } from '../../domain/interfaces/repository.interface';
@@ -266,24 +267,18 @@ export class EmisoresService {
     p12Buffer: Buffer,
     password: string,
   ): { validoHasta: Date; sujeto: string } {
-    const p12Asn1 = forge.asn1.fromDer(p12Buffer.toString('binary'));
-    const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+    const p12 = parsePKCS12(p12Buffer, { passphrase: password });
+    const { signingCert } = extractSigningCertificate(p12);
 
-    const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
-    const certBag = certBags[forge.pki.oids.certBag];
-
-    if (!certBag || certBag.length === 0) {
+    if (!signingCert) {
       throw new Error('No se encontró certificado en el archivo P12');
     }
 
-    const cert = certBag[0].cert;
-    if (!cert) {
-      throw new Error('Certificado inválido');
-    }
-
-    const validoHasta = cert.validity.notAfter;
-    const sujeto = cert.subject.attributes
-      .map((attr) => `${String(attr.shortName)}=${String(attr.value)}`)
+    const validoHasta = new Date(signingCert.validTo);
+    const sujeto = signingCert.subject
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
       .join(', ');
 
     return { validoHasta, sujeto };

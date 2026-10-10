@@ -3,8 +3,8 @@
 # ─── Stage: Base ──────────────────────────────────────────────────────────────
 # Hard Rule #2 (pnpm-containerization): pin Node via the pnpm runtime, not the
 # base image. The official `ghcr.io/pnpm/pnpm:12` base bundles pnpm 12.x and
-# is based on `debian:stable-slim` (glibc). We install Node 24 with
-# `pnpm runtime set node 24 -g` so the project owns the Node version.
+# is based on `debian:stable-slim` (glibc). We install Node 26 with
+# `pnpm runtime set node 26 -g` so the project owns the Node version.
 #
 # Why pnpm:12 for BOTH the builder and the runner (the part the skill text
 # doesn't spell out): native modules installed by `pnpm install` in the builder
@@ -15,10 +15,10 @@
 # runtime does not.
 FROM ghcr.io/pnpm/pnpm:12 AS base
 
-# Install Node 24 into pnpm's managed runtime. The pnpm-lock.yaml is the source
+# Install Node 26 into pnpm's managed runtime. The pnpm-lock.yaml is the source
 # of truth for installed deps, so the pnpm version that ships in the base
 # (currently 12.9.1) is fine; --frozen-lockfile reads the lockfile as-is.
-RUN pnpm runtime set node 24 -g \
+RUN pnpm runtime set node 26 -g \
  && pnpm --version \
  && node --version
 
@@ -72,12 +72,12 @@ RUN --mount=type=cache,id=pnpm,target=/var/cache/pnpm \
 # runtime to a different libc would break them at load time with errors like
 # "Could not load the 'sharp' module using the linuxmusl-x64 runtime".
 #
-# We use `node:24-slim` instead of `ghcr.io/pnpm/pnpm:12` here because the
+# We use `node:26-slim` instead of `ghcr.io/pnpm/pnpm:12` here because the
 # pnpm:12 runtime's node binary is a pnpm-managed shim that requires root
-# to resolve, so it can't be invoked by a non-root `node` user. node:24-slim
-# is also debian 13-slim (matching pnpm:12's libc) and ships a `node` user
+# to resolve, so it can't be invoked by a non-root `node` user. node:26-slim
+# is also debian-slim (matching pnpm:12's libc) and ships a `node` user
 # with UID 1000 already configured.
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 
 # Chromium + dependencies for Puppeteer (HTML → PDF rendering). These are
 # debian package names; in alpine they'd be apk. The full set is what the
@@ -107,21 +107,17 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium
 
 WORKDIR /app
 
-# Prod node_modules from pnpm deploy — no pnpm needed at runtime
-COPY --from=builder /prod/backend/node_modules ./backend/node_modules
-COPY --from=builder /prod/backend/package.json  ./backend/package.json
-COPY --from=builder /app/backend/dist           ./backend/dist
-COPY --from=builder /app/backend/prisma         ./backend/prisma
-COPY --from=builder /app/backend/src/generated  ./backend/src/generated
-COPY --from=builder /app/backend/src/infrastructure/pdf/assets ./backend/src/infrastructure/pdf/assets
-COPY --from=builder /app/backend/prisma.config.ts ./backend/prisma.config.ts
+# Prod node_modules from pnpm deploy — no pnpm needed at runtime.
+# Using --chown=node:node directly avoids the slow recursive `RUN chown -R` layer.
+COPY --chown=node:node --from=builder /prod/backend/node_modules ./backend/node_modules
+COPY --chown=node:node --from=builder /prod/backend/package.json  ./backend/package.json
+COPY --chown=node:node --from=builder /app/backend/dist           ./backend/dist
+COPY --chown=node:node --from=builder /app/backend/prisma         ./backend/prisma
+COPY --chown=node:node --from=builder /app/backend/src/generated  ./backend/src/generated
+COPY --chown=node:node --from=builder /app/backend/src/infrastructure/pdf/assets ./backend/src/infrastructure/pdf/assets
+COPY --chown=node:node --from=builder /app/backend/prisma.config.ts ./backend/prisma.config.ts
 
 WORKDIR /app/backend
-
-# node:24-slim ships the `node` user with UID 1000 — same as the original
-# node:22-alpine runtime. Re-chown in case any of the COPYs above landed
-# as root (BuildKit picks the larger of the two UIDs in the source/dest).
-RUN chown -R node:node /app
 
 USER node
 EXPOSE 3000

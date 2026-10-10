@@ -12,10 +12,14 @@ import {
   readFileSync,
 } from 'fs';
 import { join, resolve, sep } from 'path';
-import * as forge from 'node-forge';
+import { parsePKCS12 } from 'node:crypto';
 import { STORAGE_PATHS } from '../../emision/infrastructure/storage/storage-paths';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import {
+  parseDistinguishedName,
+  extractSigningCertificate,
+} from '../../../shared/utils/p12-certificate.util';
 import {
   CertificateInfo,
   ExtractedCertInfo,
@@ -172,31 +176,8 @@ export class CertificateService {
     password: string,
   ): ExtractedCertInfo {
     try {
-      const p12Der = forge.util.createBuffer(p12Buffer.toString('binary'));
-      const p12Asn1 = forge.asn1.fromDer(p12Der);
-      const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
-
-      let signingCert: forge.pki.Certificate | null = null;
-
-      p12.safeContents.forEach((safeContent) => {
-        safeContent.safeBags.forEach((safeBag) => {
-          if (safeBag.type === forge.pki.oids.certBag && safeBag.cert) {
-            if (!signingCert) {
-              signingCert = safeBag.cert;
-            } else {
-              const isCA =
-                safeBag.cert.extensions &&
-                safeBag.cert.extensions.some(
-                  (ext: any) =>
-                    ext.name === 'basicConstraints' && ext.cA === true,
-                );
-              if (!isCA) {
-                signingCert = safeBag.cert;
-              }
-            }
-          }
-        });
-      });
+      const p12 = parsePKCS12(p12Buffer, { passphrase: password });
+      const { signingCert } = extractSigningCertificate(p12);
 
       if (!signingCert) {
         throw new InvalidDomainOperationException(
@@ -204,27 +185,26 @@ export class CertificateService {
         );
       }
 
-      const subject = (signingCert as forge.pki.Certificate).subject;
-      const issuer = (signingCert as forge.pki.Certificate).issuer;
-      const validFrom = (signingCert as forge.pki.Certificate).validity
-        .notBefore;
-      const validTo = (signingCert as forge.pki.Certificate).validity.notAfter;
+      const subjectFields = parseDistinguishedName(signingCert.subject);
+      const issuerFields = parseDistinguishedName(signingCert.issuer);
+      const validFrom = new Date(signingCert.validFrom);
+      const validTo = new Date(signingCert.validTo);
 
       return {
         subject: {
-          commonName: subject.getField('CN')?.value || 'No disponible',
-          organization: subject.getField('O')?.value || 'No disponible',
-          country: subject.getField('C')?.value || 'No disponible',
+          commonName: subjectFields['CN'] || 'No disponible',
+          organization: subjectFields['O'] || 'No disponible',
+          country: subjectFields['C'] || 'No disponible',
         },
         issuer: {
-          commonName: issuer.getField('CN')?.value || 'No disponible',
-          organization: issuer.getField('O')?.value || 'No disponible',
+          commonName: issuerFields['CN'] || 'No disponible',
+          organization: issuerFields['O'] || 'No disponible',
         },
         validity: {
           notBefore: validFrom,
           notAfter: validTo,
         },
-        serialNumber: (signingCert as forge.pki.Certificate).serialNumber,
+        serialNumber: signingCert.serialNumber,
         isExpired: new Date() > validTo,
         daysUntilExpiry: Math.ceil(
           (validTo.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
