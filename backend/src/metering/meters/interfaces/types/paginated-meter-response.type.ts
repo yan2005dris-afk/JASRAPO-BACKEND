@@ -1,4 +1,4 @@
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { MeterResponseDto } from '../dto/meter-response.dto';
 
 export interface MeterKpis {

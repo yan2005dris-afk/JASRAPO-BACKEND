@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 import {
   EstadoCobranzaContrato,
   EstadoServicioContrato,

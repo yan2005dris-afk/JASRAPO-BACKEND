@@ -1,5 +1,5 @@
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type {
   RouteRow,
   ReadingForRouteRow,

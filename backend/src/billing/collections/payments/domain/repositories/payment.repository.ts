@@ -11,8 +11,8 @@ import type {
   CreateDetallePagoData,
   CreateSaldoFavorData,
 } from '../types/payment.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 export abstract class PaymentRepository {

@@ -9,8 +9,8 @@ import { ordenTrabajoRow } from '../__test-utils__/route-row.factory';
 import type {
   PaginatedResult,
   PaginationMeta,
-} from 'src/shared/domain/types/pagination.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+} from 'src/shared/pagination/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
 
 describe('OrdenesTrabajoService', () => {
   let service: OrdenesTrabajoService;

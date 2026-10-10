@@ -13,7 +13,7 @@ import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/pars
 import { ReadingService } from '../../application/reading.service';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
 import { ResponseReadingDto } from '../dto/response-reading.dto';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,

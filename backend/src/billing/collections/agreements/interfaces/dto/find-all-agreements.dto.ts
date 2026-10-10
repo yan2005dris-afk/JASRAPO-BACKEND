@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from '../../../../../infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 import { EstadoConvenio } from 'src/shared/enums';
 
 export class FindAllAgreementsDto extends PaginationDto {

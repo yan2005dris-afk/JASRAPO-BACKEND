@@ -15,14 +15,14 @@ import {
   GetPendingInvitationsUseCase,
   PendingInvitation,
 } from './use-cases/get-pending-invitations.use-case';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 import type {
   UserRow,
   UserDetailData,
   UserAvatar,
   EffectivePermissionsResponse,
 } from '../domain/types/user.types';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { InvitationService } from 'src/identity/auth/application/services/invitation.service';

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import type { RouteFilters } from '../../domain/types/route.types';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { getPagination } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class FindAllRoutesUseCase {

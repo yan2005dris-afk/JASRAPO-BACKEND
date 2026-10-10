@@ -1,4 +1,4 @@
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
 
 export interface OrdenTrabajoFilters {
   rutaId?: bigint;

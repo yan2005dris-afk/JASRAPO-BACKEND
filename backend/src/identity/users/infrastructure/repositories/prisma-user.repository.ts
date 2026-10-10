@@ -15,7 +15,7 @@ import {
   UserRolePermission,
 } from '../../domain/repositories/user.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import { paginate } from 'src/infrastructure/common/utils/pagination.util';
+import { paginate } from 'src/shared/pagination/pagination.util';
 import {
   userWithRolesSelect,
   userWithPasswordAndLockoutSelect,

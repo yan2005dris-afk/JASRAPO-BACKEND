@@ -9,8 +9,8 @@ import { ClientRepository } from '../../domain/repositories/client.repository';
 import {
   paginate,
   PaginateOptions,
-} from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+} from 'src/shared/pagination/pagination.util';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { ClientRow } from './client.include';
 import { clientInclude } from './client.include';
 import type {

@@ -2,11 +2,11 @@ import type {
   PaginatedResult,
   PaginateOptions,
   PaginationOffset,
-} from 'src/shared/domain/types/pagination.types';
+} from 'src/shared/pagination/pagination.types';
 
 /**
  * @deprecated Importar `PaginationOffset` desde
- * `src/shared/domain/types/pagination.types`. Se mantiene como alias
+ * `src/shared/pagination/pagination.types`. Se mantiene como alias
  * para no romper imports existentes.
  */
 export type PaginationParams = PaginationOffset;

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
 import type { RubroFilters, RubroRow } from '../../domain/types/rubro.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 export interface FindAllRubrosParams {
   page?: number;

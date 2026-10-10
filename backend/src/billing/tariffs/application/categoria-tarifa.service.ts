@@ -7,7 +7,7 @@ import { FindOneTariffCategoryUseCase } from './use-cases/find-one-tariff-catego
 import { UpdateTariffCategoryUseCase } from './use-cases/update-tariff-category.use-case';
 import { RemoveTariffCategoryUseCase } from './use-cases/remove-tariff-category.use-case';
 import type { TariffCategoryEntity } from '../domain/entities/tariff-category.entity';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class CategoriaTarifaService {

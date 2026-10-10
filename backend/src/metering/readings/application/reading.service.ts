@@ -7,7 +7,7 @@ import { UpdateReadingUseCase } from './use-cases/update-reading.use-case';
 import { RemoveReadingUseCase } from './use-cases/remove-reading.use-case';
 import { LecturaEntity } from '../domain/entities/lectura.entity';
 import { ReadingFilters } from '../domain/repositories/reading.repository';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 @LogContext()

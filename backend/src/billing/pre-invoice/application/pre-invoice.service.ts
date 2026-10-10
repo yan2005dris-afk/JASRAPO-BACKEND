@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { PREINVOICE_STATES } from '../domain/constants/pre-invoice-states';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllPreInvoicesUseCase } from './use-cases/find-all-pre-invoices.use-case';

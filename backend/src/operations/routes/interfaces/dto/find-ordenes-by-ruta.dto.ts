@@ -1,6 +1,6 @@
 import { IsOptional, IsEnum } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 import { EstadoOrdenTrabajo } from 'src/shared/enums';
 
 export class FindOrdenesByRutaDto extends PaginationDto {

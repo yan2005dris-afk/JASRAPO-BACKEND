@@ -5,8 +5,8 @@ export interface PaginationParams {
 
 /**
  * Offset ya calculado para Prisma (`skip`/`take`).
- * Dueño canónico del shape que antes vivía duplicado como
- * `PaginationParams` en `infrastructure/common/utils/pagination.util.ts`.
+ * Dueño canónico del shape que antes vivía duplicado en
+ * `pagination.util.ts` (ahora conviven en `shared/pagination/`).
  */
 export interface PaginationOffset {
   skip: number;

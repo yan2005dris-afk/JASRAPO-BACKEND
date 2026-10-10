@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsOptional, Matches } from 'class-validator';
 import { Banco, EstadoPago, TarjetaCredito } from 'src/shared/enums';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 
 export class FindAllPaymentsDto extends PaginationDto {
   @ApiPropertyOptional({ example: '1', description: 'Filtrar por cliente' })

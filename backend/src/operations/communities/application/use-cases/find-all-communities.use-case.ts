@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
 import type { CommunityRow } from '../../domain/types/community.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
+import { getPagination } from 'src/shared/pagination/pagination.util';
 import type { CommunityFilterDto } from '../../interfaces/dto/community-filter.dto';
 
 @Injectable()

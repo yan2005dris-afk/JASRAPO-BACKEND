@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { ContractRow } from '../../infrastructure/repositories/contract.include';
 import type { ContractFilters } from '../../domain/types/contract.types';
 

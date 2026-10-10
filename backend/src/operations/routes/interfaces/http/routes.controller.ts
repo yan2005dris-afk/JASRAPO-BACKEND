@@ -35,11 +35,11 @@ import {
   ReadingForRouteResponseDto,
 } from '../dto/route-response.dto';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { RouteFilters } from '../../domain/types/route.types';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
+import { PaginationDto } from 'src/shared/pagination/pagination.dto';
 
 @ApiTags('routes')
 @ApiBearerAuth()

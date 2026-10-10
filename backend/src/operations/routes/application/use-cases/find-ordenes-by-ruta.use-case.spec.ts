@@ -9,8 +9,8 @@ import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exc
 import type {
   PaginatedResult,
   PaginationMeta,
-} from 'src/shared/domain/types/pagination.types';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+} from 'src/shared/pagination/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
 
 describe('FindOrdenesByRutaUseCase', () => {
   let useCase: FindOrdenesByRutaUseCase;

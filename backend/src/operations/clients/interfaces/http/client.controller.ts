@@ -27,9 +27,9 @@ import {
   ClientResponseDto,
   TipoIdentificacionResponseDto,
 } from '../dto/client-response.dto';
-import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @ApiTags('clients')
 @ApiBearerAuth()

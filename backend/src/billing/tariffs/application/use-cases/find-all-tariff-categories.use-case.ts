@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
 
 @Injectable()

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { PermissionRow } from '../../domain/types/permission.types';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import { getPagination } from 'src/shared/pagination/pagination.util';
 
 @Injectable()
 export class FindAllPermissionsUseCase {

@@ -7,7 +7,7 @@ import { GetAllSectorsUseCase } from './use-cases/get-all-sectors.use-case';
 import { GetSectorUseCase } from './use-cases/get-sector.use-case';
 import { DeleteSectorUseCase } from './use-cases/delete-sector.use-case';
 import type { SectorRow } from '../domain/types/sector.types';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 
 @Injectable()
 export class SectorService {

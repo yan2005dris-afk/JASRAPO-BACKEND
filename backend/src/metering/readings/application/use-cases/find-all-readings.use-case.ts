@@ -3,8 +3,8 @@ import {
   ReadingFilters,
   ReadingRepository,
 } from '../../domain/repositories/reading.repository';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { getPagination } from 'src/shared/pagination/pagination.util';
+import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 @Injectable()

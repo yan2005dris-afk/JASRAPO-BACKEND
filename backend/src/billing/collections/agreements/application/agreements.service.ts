@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EstadoConvenio, EstadoCuotaConvenio } from 'src/shared/enums';
-import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { PaginateOptions } from 'src/shared/pagination/pagination.util';
+import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { CreateAgreementDto } from '../interfaces/dto/create-agreement.dto';
 import { DebtSummaryResponseDto } from '../interfaces/dto/debt-summary-response.dto';
 import {
