@@ -306,9 +306,9 @@ export class PrismaReadingRepository implements ReadingRepository {
     return ReadingMapper.toDomainList(records);
   }
 
-  async count(params: { where?: ReadingFilters }): Promise<number> {
+  async count(params?: { where?: ReadingFilters }): Promise<number> {
     return this.prisma.lecturas.count({
-      where: this.buildWhereClause(params.where),
+      where: this.buildWhereClause(params?.where),
     });
   }
 

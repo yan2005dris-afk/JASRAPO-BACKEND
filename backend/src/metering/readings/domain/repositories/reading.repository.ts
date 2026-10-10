@@ -51,7 +51,7 @@ export abstract class ReadingRepository {
     take?: number;
     where?: ReadingFilters;
   }): Promise<LecturaEntity[]>;
-  abstract count(params: { where?: ReadingFilters }): Promise<number>;
+  abstract count(params?: { where?: ReadingFilters }): Promise<number>;
   abstract update(
     where: { lecturaId: bigint },
     data: UpdateReadingRepositoryData,
