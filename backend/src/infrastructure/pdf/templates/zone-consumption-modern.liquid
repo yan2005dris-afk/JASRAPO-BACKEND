@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumo por Zonas - Moderno</title>
+    {% render "styles" %}
+    {% render "modern-styles" %}
+    <style>
+        .header-right {
+            text-align: right;
+            border-left: 2px solid var(--brand-light);
+            padding-left: 24px;
+        }
+
+        .total-label-sm {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin: 0 0 4px 0;
+        }
+
+        .total-amount-lg {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--brand-main);
+            margin: 0;
+        }
+
+        .total-amount-lg .unit {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .metrics-box {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--brand-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-col {
+            border-left: 1px solid #cbd5e1;
+            padding-left: 24px;
+        }
+
+        .metric-col:first-child {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .metric-col-right {
+            flex: 1;
+            text-align: right;
+        }
+
+        .metric-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-accent);
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        .table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+
+        th {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.text-right { text-align: right; }
+        td.text-right { text-align: right; }
+        th.text-center { text-align: center; }
+        td.text-center { text-align: center; }
+
+        td {
+            padding: 9px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .col-zona { font-weight: 700; color: var(--brand-dark); }
+        .col-muted { color: var(--text-light); }
+        .col-consumo { font-weight: 700; color: var(--brand-main); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 8.5px;
+        }
+
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-warn { background: #fef3c7; color: #92660b; }
+        .badge-zero { color: var(--text-light); }
+
+        .empty-row td {
+            text-align: center;
+            color: var(--text-light);
+            padding: 24px 12px;
+        }
+
+        .footer-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            page-break-inside: avoid;
+        }
+
+        .footnote {
+            font-size: 8px;
+            color: var(--text-light);
+            max-width: 60%;
+            line-height: 1.5;
+        }
+
+        .footer-box {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            border-radius: 6px;
+            padding: 16px 32px;
+            text-align: right;
+            min-width: 240px;
+        }
+
+        .footer-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-light);
+            letter-spacing: 1px;
+            margin: 0 0 6px 0;
+            opacity: 0.9;
+        }
+
+        .footer-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .footer-value .unit {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
+            </div>
+            <div>
+                <h1 class="title">{{titulo}}</h1>
+                <p class="subtitle">{{institucion.nombreLegal}}</p>
+                <p class="date-info">
+                    Periodo: <span>{{meta.periodoNombre}}</span>
+                    · Versión documental: <span>{{institucion.version}}</span>
+                </p>
+            </div>
+        </div>
+        <div class="header-right">
+            <p class="total-label-sm">Consumo total del sistema</p>
+            <p class="total-amount-lg">{{kpis.consumoTotalSistema}} <span class="unit">m³</span></p>
+        </div>
+    </header>
+
+    <div class="metrics-box">
+        <div class="metric-col">
+            <p class="metric-label">Filtro</p>
+            <p class="metric-value">{{filtros.descripcion}}</p>
+        </div>
+        <div class="metric-col">
+            <p class="metric-label">Zonas</p>
+            <p class="metric-value">{{kpis.totalZonas}}</p>
+        </div>
+        <div class="metric-col">
+            <p class="metric-label">Medidores sin lectura</p>
+            <p class="metric-value">{{kpis.medidoresSinLectura}}</p>
+        </div>
+        <div class="metric-col metric-col-right">
+            <p class="metric-label">Zona de mayor consumo</p>
+            <p class="metric-value">{{kpis.zonaMayorConsumo}}</p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 18%;">Zona (Sector)</th>
+                    <th style="width: 15%;">Comunidad</th>
+                    <th class="text-right" style="width: 13%;">Consumo (m³)</th>
+                    <th class="text-center" style="width: 10%;">Medidores</th>
+                    <th class="text-right" style="width: 12%;">Promedio (m³)</th>
+                    <th class="text-center" style="width: 12%;">Estimadas</th>
+                    <th class="text-center" style="width: 10%;">Sin lectura</th>
+                    <th class="text-right" style="width: 10%;">% Sistema</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td class="col-zona">{{ item.sectorNombre }}</td>
+                    <td class="col-muted">{{ item.comunidadNombre }}</td>
+                    <td class="text-right col-consumo">{{ item.consumoTotal }}</td>
+                    <td class="text-center">{{ item.medidoresConLectura }}</td>
+                    <td class="text-right">{{ item.consumoPromedio }}</td>
+                    <td class="text-center">
+                        {% if item.tieneEstimadas %}
+                        <span class="badge badge-info">{{ item.estimadasCount }} · {{ item.estimadasVolumen }} m³</span>
+                        {% else %}
+                        <span class="badge-zero">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if item.tieneFaltantes %}
+                        <span class="badge badge-warn">{{ item.medidoresSinLectura }}</span>
+                        {% else %}
+                        <span class="badge-zero">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right col-muted">{{ item.porcentajeSistema }}%</td>
+                </tr>
+                {% else %}
+                <tr class="empty-row">
+                    <td colspan="8">No se registró consumo por zona para el periodo seleccionado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-container">
+        <p class="footnote">
+            Consumo medido = lecturas APROBADA y PLANILLADA. Las estimadas se
+            reportan por separado y no se suman al consumo medido. "Sin lectura"
+            cuenta medidores de contratos activos sin lectura en el periodo (no se
+            estima). {{filtros.definicionesVersion}}.
+        </p>
+        <div class="footer-box">
+            <p class="footer-label">Consumo Total del Sistema</p>
+            <p class="footer-value">{{kpis.consumoTotalSistema}} <span class="unit">m³</span></p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

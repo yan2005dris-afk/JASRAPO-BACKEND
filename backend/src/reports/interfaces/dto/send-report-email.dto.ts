@@ -85,11 +85,27 @@ export class SendReportEmailDto {
 
   @ApiPropertyOptional({
     description:
-      'ID del sector (BigInt como string). Filtro opcional para POST /reports/overdue-accounts/email.',
+      'ID del sector (BigInt como string). Filtro opcional para POST /reports/overdue-accounts/email y /reports/zone-consumption/email.',
   })
   @IsOptional()
   @IsNotEmptyString()
   sectorId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ID del periodo de facturación. Filtro opcional para POST /reports/zone-consumption/email.',
+  })
+  @IsOptional()
+  @IsNotEmptyString()
+  periodoId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ID de la comunidad. Filtro opcional para POST /reports/zone-consumption/email.',
+  })
+  @IsOptional()
+  @IsNotEmptyString()
+  comunidadId?: string;
 
   @ApiPropertyOptional({
     description:

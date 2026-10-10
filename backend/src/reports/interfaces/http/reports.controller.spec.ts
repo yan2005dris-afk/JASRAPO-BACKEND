@@ -56,6 +56,12 @@ describe('ReportsController', () => {
     }),
   };
   const agreement = { generate: jest.fn().mockResolvedValue(projection) };
+  const zoneConsumption = {
+    generate: jest.fn().mockResolvedValue({
+      document: { data: [], meta: { total: 0 }, kpis: {} },
+      recipientEmail: null,
+    }),
+  };
   const contextFactory = new ReportRequestContextFactory();
   const dispatcher = {
     dispatch: jest.fn().mockResolvedValue({
@@ -79,6 +85,7 @@ describe('ReportsController', () => {
     account as never,
     overdue as never,
     agreement as never,
+    zoneConsumption as never,
     contextFactory,
     dispatcher as never,
     exportStreamService as never,

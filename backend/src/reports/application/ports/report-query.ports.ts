@@ -22,6 +22,10 @@ import type {
   PaymentsReportFilters,
   PaymentsReportReadModel,
 } from '../read-models/payments-report.read-model';
+import type {
+  ZoneConsumptionReportFilters,
+  ZoneConsumptionReportReadModel,
+} from '../read-models/zone-consumption.read-model';
 import type { ReportRequestContext } from '../models/report-request-context';
 
 export interface ReportQueryPort<TFilters extends object, TReadModel> {
@@ -80,4 +84,13 @@ export abstract class PaymentAgreementReportQueryPort implements ReportQueryPort
   abstract query(
     context: ReportRequestContext<PaymentAgreementReportFilters>,
   ): Promise<PaymentAgreementReportReadModel>;
+}
+
+export abstract class ZoneConsumptionReportQueryPort implements ReportQueryPort<
+  ZoneConsumptionReportFilters,
+  ZoneConsumptionReportReadModel
+> {
+  abstract query(
+    context: ReportRequestContext<ZoneConsumptionReportFilters>,
+  ): Promise<ZoneConsumptionReportReadModel>;
 }

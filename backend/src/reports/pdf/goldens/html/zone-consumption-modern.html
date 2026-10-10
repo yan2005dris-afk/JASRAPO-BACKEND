@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumo por Zonas - Moderno</title>
+    <style>
+  :root {
+    --primary-color: #0c9ea1;
+    --primary-color-light: #dbf7f8;
+    --text-main: #0e2728;
+    --text-muted: #597b7d;
+    --border-color: #cbdedf;
+    --estado-activo: #10b981;
+    --estado-inactivo: #ef4444;
+  }
+</style>
+    <style>
+    :root {
+        --brand-main: var(--primary-color, #0c9ea1);
+        --brand-light: var(--primary-color-light, #dbf7f8);
+        --brand-dark: #0e2728;
+        --brand-accent: #0c9ea1;
+        --text-main: #0e2728;
+        --text-muted: #597b7d;
+        --text-light: var(--text-muted, #597b7d);
+        --text-lighter: #8da4a6;
+        --border-color: #cbdedf;
+    }
+
+    @page {
+        margin: 10mm;
+        size: A4 portrait;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10px;
+        color: var(--text-main);
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    *, *:before, *:after {
+        box-sizing: inherit;
+    }
+
+    .container, .page-container {
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    /* Modern Flex & Table Headers */
+    .header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        border-bottom: 3px solid var(--brand-main);
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+    }
+
+    .header-table {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid var(--brand-main);
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .header-right {
+        text-align: right;
+    }
+
+    .logo-container {
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+    }
+
+    .logo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .brand-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--brand-dark);
+        letter-spacing: -0.5px;
+    }
+
+    .brand-subtitle {
+        font-size: 10px;
+        color: var(--brand-accent);
+        font-weight: 600;
+    }
+
+    .report-title-main {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--brand-dark);
+    }
+
+    .report-meta-text {
+        font-size: 9px;
+        color: var(--text-muted);
+    }
+
+    .title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--brand-dark);
+        letter-spacing: -0.5px;
+        text-transform: uppercase;
+        margin: 0 0 4px 0;
+    }
+
+    .subtitle {
+        color: var(--brand-accent);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 6px 0;
+    }
+
+    .date-info {
+        color: var(--text-light);
+        font-size: 10px;
+        margin: 0;
+    }
+
+    .date-info span {
+        font-weight: 600;
+        color: var(--brand-main);
+    }
+
+    .total-label-sm {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin: 0 0 2px 0;
+    }
+
+    .total-amount-lg {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--brand-dark);
+        margin: 0;
+    }
+
+    /* Modern Table Styles */
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 9px;
+    }
+
+    .modern-table th {
+        background-color: var(--brand-main);
+        color: #ffffff;
+        padding: 7px 8px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 8.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+
+    .modern-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 9px;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+
+    .modern-table tr:nth-child(even) td {
+        background-color: #f8fafc;
+    }
+
+    .footer-note {
+        text-align: center;
+        font-size: 8.5px;
+        color: var(--text-lighter);
+        border-top: 1px solid #e2e8f0;
+        padding-top: 10px;
+    }
+</style>
+
+    <style>
+        .header-right {
+            text-align: right;
+            border-left: 2px solid var(--brand-light);
+            padding-left: 24px;
+        }
+
+        .total-label-sm {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin: 0 0 4px 0;
+        }
+
+        .total-amount-lg {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--brand-main);
+            margin: 0;
+        }
+
+        .total-amount-lg .unit {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .metrics-box {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--brand-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-col {
+            border-left: 1px solid #cbd5e1;
+            padding-left: 24px;
+        }
+
+        .metric-col:first-child {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .metric-col-right {
+            flex: 1;
+            text-align: right;
+        }
+
+        .metric-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-accent);
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        .table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+
+        th {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.text-right { text-align: right; }
+        td.text-right { text-align: right; }
+        th.text-center { text-align: center; }
+        td.text-center { text-align: center; }
+
+        td {
+            padding: 9px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .col-zona { font-weight: 700; color: var(--brand-dark); }
+        .col-muted { color: var(--text-light); }
+        .col-consumo { font-weight: 700; color: var(--brand-main); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 8.5px;
+        }
+
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-warn { background: #fef3c7; color: #92660b; }
+        .badge-zero { color: var(--text-light); }
+
+        .empty-row td {
+            text-align: center;
+            color: var(--text-light);
+            padding: 24px 12px;
+        }
+
+        .footer-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            page-break-inside: avoid;
+        }
+
+        .footnote {
+            font-size: 8px;
+            color: var(--text-light);
+            max-width: 60%;
+            line-height: 1.5;
+        }
+
+        .footer-box {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            border-radius: 6px;
+            padding: 16px 32px;
+            text-align: right;
+            min-width: 240px;
+        }
+
+        .footer-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-light);
+            letter-spacing: 1px;
+            margin: 0 0 6px 0;
+            opacity: 0.9;
+        }
+
+        .footer-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .footer-value .unit {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="data:image/jpeg;base64,PDF_LOGO_DATA" alt="Logo institucional">
+            </div>
+            <div>
+                <h1 class="title">Consumo por Zonas</h1>
+                <p class="subtitle">JUNTA ADMINISTRADORA DE AGUA POTABLE OLON</p>
+                <p class="date-info">
+                    Periodo: <span>ENERO 2024</span>
+                    · Versión documental: <span>v1</span>
+                </p>
+            </div>
+        </div>
+        <div class="header-right">
+            <p class="total-label-sm">Consumo total del sistema</p>
+            <p class="total-amount-lg">500.00 <span class="unit">m³</span></p>
+        </div>
+    </header>
+
+    <div class="metrics-box">
+        <div class="metric-col">
+            <p class="metric-label">Filtro</p>
+            <p class="metric-value">Todas las zonas</p>
+        </div>
+        <div class="metric-col">
+            <p class="metric-label">Zonas</p>
+            <p class="metric-value">2</p>
+        </div>
+        <div class="metric-col">
+            <p class="metric-label">Medidores sin lectura</p>
+            <p class="metric-value">2</p>
+        </div>
+        <div class="metric-col metric-col-right">
+            <p class="metric-label">Zona de mayor consumo</p>
+            <p class="metric-value">Sector Norte</p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 18%;">Zona (Sector)</th>
+                    <th style="width: 15%;">Comunidad</th>
+                    <th class="text-right" style="width: 13%;">Consumo (m³)</th>
+                    <th class="text-center" style="width: 10%;">Medidores</th>
+                    <th class="text-right" style="width: 12%;">Promedio (m³)</th>
+                    <th class="text-center" style="width: 12%;">Estimadas</th>
+                    <th class="text-center" style="width: 10%;">Sin lectura</th>
+                    <th class="text-right" style="width: 10%;">% Sistema</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td class="col-zona">Sector Norte</td>
+                    <td class="col-muted">Olón Centro</td>
+                    <td class="text-right col-consumo">320.00</td>
+                    <td class="text-center">3</td>
+                    <td class="text-right">106.67</td>
+                    <td class="text-center">
+
+                        <span class="badge badge-info">1 · 15.00 m³</span>
+
+                    </td>
+                    <td class="text-center">
+
+                        <span class="badge badge-warn">2</span>
+
+                    </td>
+                    <td class="text-right col-muted">64.0%</td>
+                </tr>
+
+                <tr>
+                    <td class="col-zona">Sector Sur</td>
+                    <td class="col-muted">Olón Centro</td>
+                    <td class="text-right col-consumo">180.00</td>
+                    <td class="text-center">2</td>
+                    <td class="text-right">90.00</td>
+                    <td class="text-center">
+
+                        <span class="badge-zero">—</span>
+
+                    </td>
+                    <td class="text-center">
+
+                        <span class="badge-zero">0</span>
+
+                    </td>
+                    <td class="text-right col-muted">36.0%</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-container">
+        <p class="footnote">
+            Consumo medido = lecturas APROBADA y PLANILLADA. Las estimadas se
+            reportan por separado y no se suman al consumo medido. "Sin lectura"
+            cuenta medidores de contratos activos sin lectura en el periodo (no se
+            estima). defs v0.1 (prototipo).
+        </p>
+        <div class="footer-box">
+            <p class="footer-label">Consumo Total del Sistema</p>
+            <p class="footer-value">500.00 <span class="unit">m³</span></p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -166,6 +166,26 @@ export class ReportExportAdapter {
         return { columns, rows, sheetName: 'Convenio' };
       }
 
+      case 'zone-consumption': {
+        const rows = reporte?.data || [];
+        const columns: ColumnDefinition[] = [
+          { header: 'Zona (Sector)', key: 'sectorNombre', width: 24 },
+          { header: 'Comunidad', key: 'comunidadNombre', width: 20 },
+          { header: 'Consumo (m³)', key: 'consumoTotal', width: 16 },
+          { header: 'Medidores', key: 'medidoresConLectura', width: 12 },
+          { header: 'Promedio (m³)', key: 'consumoPromedio', width: 16 },
+          { header: 'Estimadas', key: 'estimadasCount', width: 12 },
+          {
+            header: 'Volumen Estimado (m³)',
+            key: 'estimadasVolumen',
+            width: 20,
+          },
+          { header: 'Sin Lectura', key: 'medidoresSinLectura', width: 14 },
+          { header: '% Sistema', key: 'porcentajeSistema', width: 12 },
+        ];
+        return { columns, rows, sheetName: 'Consumo por Zonas' };
+      }
+
       default: {
         return { columns: [], rows: [], sheetName: 'Reporte' };
       }

@@ -5,6 +5,7 @@ import { ConnectionHistoryReportDefinition } from '../definitions/connection-his
 import { OverdueAccountsReportDefinition } from '../definitions/overdue-accounts-report.definition';
 import { PaymentAgreementReportDefinition } from '../definitions/payment-agreement-report.definition';
 import { PaymentsReportDefinition } from '../definitions/payments-report.definition';
+import { ZoneConsumptionReportDefinition } from '../definitions/zone-consumption-report.definition';
 import type {
   ProjectedReport,
   ReportDocument,
@@ -15,6 +16,7 @@ import type { PaymentsReportFilters } from '../read-models/payments-report.read-
 import type { ConnectionHistoryReportFilters } from '../read-models/connection-history.read-model';
 import type { AccountStatementReportFilters } from '../read-models/account-statement.read-model';
 import type { OverdueAccountsReportFilters } from '../read-models/overdue-accounts.read-model';
+import type { ZoneConsumptionReportFilters } from '../read-models/zone-consumption.read-model';
 import type { ReportKey } from '../report-style.service';
 import type { ReportRequestContext } from '../models/report-request-context';
 
@@ -144,6 +146,24 @@ export class OverdueAccountsReportEmailStrategy {
   }
 }
 
+@Injectable()
+export class ZoneConsumptionReportEmailStrategy {
+  constructor(private readonly definition: ZoneConsumptionReportDefinition) {}
+
+  build(): ReportEmailStrategy {
+    return {
+      reportType: 'zone-consumption',
+      fetchReport: (context) => this.definition.generate(context),
+      // Reporte administrativo: no deriva destinatario, requiere override explícito.
+      recipientResolver: () => null,
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as ZoneConsumptionReportFilters;
+        return `Consumo por Zonas${typedFilters.periodoId ? ` — Periodo #${typedFilters.periodoId}` : ''}`;
+      },
+    };
+  }
+}
+
 export type ReportEmailStrategyMap = Record<ReportKey, ReportEmailStrategy>;
 
 export const buildReportEmailStrategies = (
@@ -153,6 +173,7 @@ export const buildReportEmailStrategies = (
   accountStatement: AccountStatementReportEmailStrategy,
   clientsList: ClientsListReportEmailStrategy,
   overdueAccounts: OverdueAccountsReportEmailStrategy,
+  zoneConsumption: ZoneConsumptionReportEmailStrategy,
 ): ReportEmailStrategyMap => ({
   'payments-report': payments.build(),
   'connection-history': connectionHistory.build(),
@@ -160,6 +181,7 @@ export const buildReportEmailStrategies = (
   'account-statement': accountStatement.build(),
   'clients-list': clientsList.build(),
   'overdue-accounts': overdueAccounts.build(),
+  'zone-consumption': zoneConsumption.build(),
 });
 
 export const REPORT_EMAIL_STRATEGIES_PROVIDER = {
@@ -172,5 +194,6 @@ export const REPORT_EMAIL_STRATEGIES_PROVIDER = {
     AccountStatementReportEmailStrategy,
     ClientsListReportEmailStrategy,
     OverdueAccountsReportEmailStrategy,
+    ZoneConsumptionReportEmailStrategy,
   ],
 };
