@@ -215,5 +215,4 @@ describe('RoutesService', () => {
     expect(routeRepository.findAllPeriodos).toHaveBeenCalled();
     expect(res).toEqual(mockPeriodos);
   });
-
 });

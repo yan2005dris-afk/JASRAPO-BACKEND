@@ -663,5 +663,4 @@ export class PrismaRouteRepository implements RouteRepository {
       sectorId: r.sectorId,
     }));
   }
-
 }
