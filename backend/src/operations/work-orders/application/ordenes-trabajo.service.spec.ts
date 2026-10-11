@@ -5,7 +5,7 @@ import { FindOrdenesByRutaUseCase } from './use-cases/find-ordenes-by-ruta.use-c
 import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-case';
 import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
-import { ordenTrabajoRow } from '../__test-utils__/route-row.factory';
+import { ordenTrabajoRow } from 'src/operations/routes/__test-utils__/route-row.factory';
 import type {
   PaginatedResult,
   PaginationMeta,

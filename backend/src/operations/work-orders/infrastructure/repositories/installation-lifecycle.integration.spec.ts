@@ -2,7 +2,7 @@ import { Client } from 'pg';
 import { PrismaContractRepository } from 'src/operations/contracts/infrastructure/repositories/prisma-contract.repository';
 import { ContractGuideGeneratorService } from 'src/operations/contracts/infrastructure/services/contract-guide-generator.service';
 import { PrismaPaymentRepository } from 'src/billing/collections/payments/infrastructure/repositories/prisma-payment.repository';
-import { PrismaRouteRepository } from './prisma-route.repository';
+import { PrismaRouteRepository } from 'src/operations/routes/infrastructure/repositories/prisma-route.repository';
 import type { CreateContractWithMeterCommand } from 'src/operations/contracts/domain/types/contract.types';
 import type { ConfigService } from '@nestjs/config';
 import {

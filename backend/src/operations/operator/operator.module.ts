@@ -9,8 +9,8 @@ import { GetOperatorSyncManifestUseCase } from './application/use-cases/get-oper
 import { GetOperatorActivityTypesUseCase } from './application/use-cases/get-operator-activity-types.use-case';
 import { PrismaOperatorRepository } from './infrastructure/repositories/prisma-operator.repository';
 import { OperatorRepository } from './domain/repositories/operator.repository';
-import { MeterModule } from '../meters/meter.module';
-import { ReadingModule } from '../readings/reading.module';
+import { MeterModule } from 'src/metering/meters/meter.module';
+import { ReadingModule } from 'src/metering/readings/reading.module';
 import { RepositoriesModule } from 'src/operations/routes/repositories.module';
 import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/work-order-novelties.module';
 

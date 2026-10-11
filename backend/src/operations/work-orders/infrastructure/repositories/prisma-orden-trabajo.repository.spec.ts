@@ -1,5 +1,5 @@
 import { PrismaOrdenTrabajoRepository } from './prisma-orden-trabajo.repository';
-import { ordenTrabajoInclude } from './route.include';
+import { ordenTrabajoInclude } from 'src/operations/routes/infrastructure/repositories/route.include';
 
 describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
   it('persists evidence and derives the effective activity from the route catalog', async () => {

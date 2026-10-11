@@ -24,7 +24,7 @@ import {
   PaginateOptions,
 } from 'src/shared/pagination/pagination.util';
 import { PaginatedResult } from 'src/shared/pagination/pagination.types';
-import type { LecturaKpis } from '../../domain/types/orden-trabajo.types';
+import type { LecturaKpis } from 'src/operations/work-orders/domain/types/orden-trabajo.types';
 import type {
   CreateRouteData,
   UpdateRouteData,

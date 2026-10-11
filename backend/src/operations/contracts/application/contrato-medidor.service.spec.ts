@@ -14,7 +14,7 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GetServiceAreaUseCase } from './use-cases/get-service-area.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
-import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
+import { OrdenTrabajoRepository } from 'src/operations/work-orders/domain/repositories/orden-trabajo.repository';
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
 

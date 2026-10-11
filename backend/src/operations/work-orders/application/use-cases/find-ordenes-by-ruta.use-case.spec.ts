@@ -2,9 +2,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOrdenesByRutaUseCase } from './find-ordenes-by-ruta.use-case';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { RouteRepository } from '../../domain/repositories/route.repository';
-import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
-import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
+import { RouteRepository } from 'src/operations/routes/domain/repositories/route.repository';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
+import { ordenTrabajoRow } from 'src/operations/routes/__test-utils__/route-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type {
   PaginatedResult,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
 import { EstadoOrdenTrabajo } from 'src/shared/enums';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import type { UpdateOrdenEstadoData } from '../../domain/types/orden-trabajo.types';

@@ -1,4 +1,4 @@
-import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
 import type {
   OrdenTrabajoFilters,
   OrdenTrabajoKpis,

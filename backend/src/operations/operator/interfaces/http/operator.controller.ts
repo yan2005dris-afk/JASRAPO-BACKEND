@@ -29,7 +29,7 @@ import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { UpdateOperatorWorkOrderUseCase } from '../../application/use-cases/update-operator-work-order.use-case';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
 import { OPERATOR_IMAGE_UPLOAD_OPTIONS } from './operator-image-upload.options';
-import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
+import { OrderWorkResponseDto } from 'src/operations/work-orders/interfaces/dto/orden-trabajo-response.dto';
 import { GetOperatorRoutesUseCase } from '../../application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from '../../application/use-cases/update-route-state.use-case';
 import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
