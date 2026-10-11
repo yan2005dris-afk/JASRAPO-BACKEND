@@ -8,7 +8,6 @@ import {
   ComunidadRef,
   SectorRef,
   PeriodoRef,
-  TipoActividadRef,
   MedidorRef,
   ContratoRef,
   EligibleReadingsCriteria,
@@ -665,18 +664,4 @@ export class PrismaRouteRepository implements RouteRepository {
     }));
   }
 
-  async findAllTiposActividad(): Promise<TipoActividadRef[]> {
-    const tipos = await this.prisma.tipoActividad.findMany({
-      where: { activo: true },
-      orderBy: { tipoActividadId: 'asc' },
-    });
-
-    return tipos.map((t) => ({
-      tipoActividadId: Number(t.tipoActividadId),
-      codigo: t.codigo,
-      nombre: t.nombre,
-      descripcion: t.descripcion,
-      activo: t.activo,
-    }));
-  }
 }

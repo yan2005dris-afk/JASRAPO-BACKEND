@@ -1,30 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-export interface ITipoActividad {
-  tipoActividadId: number;
-  codigo: string;
-  nombre: string;
-  descripcion: string | null;
-  icono: string | null;
-  activo: boolean;
-}
+import { OrdenesTrabajoService } from 'src/operations/work-orders/application/ordenes-trabajo.service';
+import type { TipoActividad } from 'src/operations/work-orders/domain/types/tipo-actividad.type';
 
+/**
+ * Returns the canonical activity-types catalog managed by the work-orders
+ * module. This use case is preserved for the operator module's
+ * per-method use-case convention, but delegates the actual lookup so the
+ * catalog has a single source of truth.
+ */
 @Injectable()
 export class GetOperatorActivityTypesUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly ordenesTrabajoService: OrdenesTrabajoService) {}
 
-  async execute(): Promise<ITipoActividad[]> {
-    const tipos = await this.prisma.tipoActividad.findMany({
-      where: { activo: true },
-      orderBy: { tipoActividadId: 'asc' },
-    });
-    return tipos.map((t) => ({
-      tipoActividadId: Number(t.tipoActividadId),
-      codigo: t.codigo,
-      nombre: t.nombre,
-      descripcion: t.descripcion,
-      icono: (t as any).icono || null, // in case it is added in the future
-      activo: t.activo,
-    }));
+  async execute(): Promise<TipoActividad[]> {
+    return this.ordenesTrabajoService.getActivityTypes();
   }
 }

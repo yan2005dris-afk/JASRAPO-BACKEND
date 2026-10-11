@@ -39,14 +39,6 @@ export interface PeriodoRef {
   fechaFin?: Date | null;
 }
 
-export interface TipoActividadRef {
-  tipoActividadId: number;
-  codigo: string;
-  nombre: string;
-  descripcion?: string | null;
-  activo: boolean;
-}
-
 export interface MedidorRef {
   medidorId: number;
   serie: string;
@@ -138,6 +130,4 @@ export abstract class RouteRepository {
   ): Promise<void>;
 
   abstract findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]>;
-
-  abstract findAllTiposActividad(): Promise<TipoActividadRef[]>;
 }

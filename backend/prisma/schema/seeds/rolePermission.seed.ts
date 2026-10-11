@@ -1,4 +1,8 @@
-import { Permisos, PrismaClient, Roles } from 'src/generated/prisma/client';
+import type {
+  Permisos,
+  PrismaClient,
+  Roles,
+} from 'src/generated/prisma/client';
 
 export async function seedRolePermissions(
   prisma: PrismaClient,
@@ -33,6 +37,7 @@ export async function seedRolePermissions(
     'agreements',
     'work-order-novelties',
     'reading-anomalies',
+    'work_orders',
   ];
   const secretaryPerms = permissions.filter((p) =>
     secretaryResources.includes(p.recurso),
@@ -68,10 +73,14 @@ export async function seedRolePermissions(
   }
 
   // 4. OPERADORES: Solo lo necesario para su pantalla de lecturas
+  //    `work_orders:update` enables the mobile operator app to mutate
+  //    work orders through `PATCH /work-orders/:id`. The previous grant
+  //    `routes:update` was a mis-mapping that also exposed administrative
+  //    actions (reassign / delete route) and has been removed.
   const operadorPermissionKeys = new Set([
     'operator-sync:read', // paginated offline manifest
     'routes:read', // listar rutas asignadas
-    'routes:update', // actualizar ordenes de trabajo de la ruta
+    'work_orders:update', // actualizar work orders desde la app móvil
     'lecturas:read', // ver lecturas asignadas
     'lecturas:update', // modificar lectura (PENDIENTE → POR_REVISION)
     'work-order-novelties:read',

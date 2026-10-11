@@ -72,20 +72,6 @@ export class RoutesController {
   }
 
   /**
-   * Obtener tipos de actividad disponibles
-   */
-  @ApiOperation({
-    summary: 'Obtener tipos de actividad',
-    description:
-      'Retorna la lista de tipos de actividad disponibles para rutas y órdenes de trabajo',
-  })
-  @RequiredPermission('routes', 'read')
-  @Get('activity-types')
-  async getActivityTypes() {
-    return this.routesService.getTiposActividad();
-  }
-
-  /**
    * Obtener lecturas elegibles para crear una ruta
    */
   @ApiOperation({

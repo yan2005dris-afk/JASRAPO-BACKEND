@@ -362,40 +362,5 @@ describe('PrismaRouteRepository', () => {
     });
   });
 
-  describe('findAllTiposActividad', () => {
-    it('should return active activity types ordered by id', async () => {
-      prisma.tipoActividad.findMany.mockResolvedValue([
-        {
-          tipoActividadId: 1n,
-          codigo: 'LECTURA',
-          nombre: 'Lectura',
-          descripcion: 'Toma de lectura',
-          activo: true,
-        },
-        {
-          tipoActividadId: 2n,
-          codigo: 'CORTE',
-          nombre: 'Corte',
-          descripcion: 'Corte de servicio',
-          activo: true,
-        },
-      ]);
-
-      const result = await repository.findAllTiposActividad();
-
-      expect(prisma.tipoActividad.findMany).toHaveBeenCalledWith({
-        where: { activo: true },
-        orderBy: { tipoActividadId: 'asc' },
-      });
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        tipoActividadId: 1,
-        codigo: 'LECTURA',
-        nombre: 'Lectura',
-        descripcion: 'Toma de lectura',
-        activo: true,
-      });
-      expect(result[1].codigo).toBe('CORTE');
-    });
-  });
 });
+

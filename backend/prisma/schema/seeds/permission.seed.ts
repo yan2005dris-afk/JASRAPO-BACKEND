@@ -1,4 +1,4 @@
-import { Permisos, PrismaClient } from 'src/generated/prisma/client';
+import type { Permisos, PrismaClient } from 'src/generated/prisma/client';
 
 const ACTION_LABELS: Record<string, string> = {
   read: 'Consultar',
@@ -70,6 +70,7 @@ export async function seedPermissions(prisma: PrismaClient) {
     'work-order-novelties',
     'reading-anomalies',
     'periodos',
+    'work_orders',
   ];
 
   const actions = ['read', 'create', 'update', 'delete'];
