@@ -19,9 +19,10 @@ import { CONTRACT_WORK_ORDER_PORT } from './application/ports/contract-work-orde
 import { ConnectionRequestPdfDocumentType } from './pdf/connection-request.pdf-type';
 import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agreement.pdf-type';
 import { RepositoriesModule } from '../routes/repositories.module';
+import { WorkOrdersModule } from '../work-orders/work-orders.module';
 
 @Module({
-  imports: [RepositoriesModule],
+  imports: [RepositoriesModule, WorkOrdersModule],
   controllers: [ContratoMedidorController],
   providers: [
     { provide: ContractRepository, useClass: PrismaContractRepository },

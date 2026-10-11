@@ -14,7 +14,6 @@ import { RequiredPermission } from 'src/common/decorators/require-permission.dec
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
 import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';
-import { LinkLecturaDto } from '../dto/link-lectura.dto';
 import { PaginationMetaDto } from 'src/shared/pagination/pagination-meta.dto';
 
 @ApiTags('work-orders')
@@ -57,42 +56,6 @@ export class OrdenesTrabajoController {
         estado: dto.estado,
         resultadoObservacion: dto.resultadoObservacion,
       },
-      Number(user.sub),
-    );
-    return OrderWorkResponseDto.fromRow(result);
-  }
-
-  /**
-   * Vincular lectura a una orden de trabajo
-   */
-  @ApiOperation({
-    summary: 'Vincular lectura a orden de trabajo',
-    description:
-      'Vincula una lectura a la orden de trabajo y marca la orden como COMPLETADA con completadoEn = now()',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID de la orden de trabajo (bigint serializado como string)',
-    type: String,
-    example: '1',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lectura vinculada exitosamente',
-    type: OrderWorkResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Orden o lectura no encontrada' })
-  @RequiredPermission('routes', 'update')
-  @Patch(':id/reading')
-  async linkLectura(
-    @Param('id', ParseBigIntPipe) id: bigint,
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: LinkLecturaDto,
-  ): Promise<OrderWorkResponseDto> {
-    const lecturaIdBigInt = BigInt(dto.lecturaId);
-    const result = await this.ordenesTrabajoService.linkLectura(
-      id,
-      { lecturaId: lecturaIdBigInt },
       Number(user.sub),
     );
     return OrderWorkResponseDto.fromRow(result);

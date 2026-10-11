@@ -3,7 +3,6 @@ import { Test } from '@nestjs/testing';
 import { OrdenesTrabajoService } from './ordenes-trabajo.service';
 import { FindOrdenesByRutaUseCase } from './use-cases/find-ordenes-by-ruta.use-case';
 import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-case';
-import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
 import { ordenTrabajoRow } from 'src/operations/routes/__test-utils__/route-row.factory';
 import type {
@@ -56,7 +55,6 @@ describe('OrdenesTrabajoService', () => {
         { provide: OrdenTrabajoRepository, useValue: {} },
         { provide: FindOrdenesByRutaUseCase, useValue: mockUseCase },
         { provide: UpdateOrdenEstadoUseCase, useValue: mockUseCase },
-        { provide: LinkLecturaUseCase, useValue: mockUseCase },
       ],
     }).compile();
 
@@ -118,26 +116,6 @@ describe('OrdenesTrabajoService', () => {
         42,
       );
       expect(result).toBe(updatedOrden);
-    });
-  });
-
-  describe('linkLectura', () => {
-    it('should delegate to LinkLecturaUseCase with the same args', async () => {
-      const linked = ordenTrabajoRow({
-        ...sampleOrden,
-        lecturaId: 999n,
-      });
-      mockUseCase.execute.mockResolvedValue(linked);
-
-      const result = await service.linkLectura(1n, { lecturaId: 999n }, 42);
-
-      expect(mockUseCase.execute).toHaveBeenCalledWith(
-        1n,
-        { lecturaId: 999n },
-        42,
-      );
-      expect(result).toBe(linked);
-      expect(result.lecturaId).toBe(999n);
     });
   });
 });
