@@ -153,7 +153,7 @@ export class OperatorController {
   @ApiResponse(operatorErrorResponse(403, 'Orden fuera de la ruta asignada'))
   @ApiResponse(operatorErrorResponse(404, 'Orden no encontrada'))
   @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
-  @RequiredPermission('routes', 'update')
+  @RequiredPermission('work_orders', 'update')
   @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
   @Patch('work-orders/:id')
   async updateOperatorWorkOrder(
