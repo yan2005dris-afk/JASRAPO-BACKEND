@@ -6,6 +6,7 @@ import { ClientModule } from './clients/client.module';
 import { RoutesModule } from './routes/routes.module';
 import { WorkOrderNoveltiesModule } from './work-order-novelties/work-order-novelties.module';
 import { OperatorModule } from './operator/operator.module';
+import { WorkOrdersModule } from './work-orders/work-orders.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { OperatorModule } from './operator/operator.module';
     RoutesModule,
     WorkOrderNoveltiesModule,
     OperatorModule,
+    WorkOrdersModule,
   ],
   exports: [
     ClientModule,
@@ -25,6 +27,7 @@ import { OperatorModule } from './operator/operator.module';
     RoutesModule,
     WorkOrderNoveltiesModule,
     OperatorModule,
+    WorkOrdersModule,
   ],
 })
 export class OperationsModule {}

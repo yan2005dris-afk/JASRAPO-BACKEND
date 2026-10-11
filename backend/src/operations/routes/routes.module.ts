@@ -13,11 +13,11 @@ import { DeleteRouteUseCase } from './application/use-cases/delete-route.use-cas
 import { ReassignRouteUseCase } from './application/use-cases/reassign-route.use-case';
 import { ExportFieldSheetPdfUseCase } from './application/use-cases/export-field-sheet-pdf.use-case';
 import { RepositoriesModule } from './repositories.module';
-import { OrdenesTrabajoModule } from './ordenes-trabajo.module';
+import { WorkOrdersModule } from '../work-orders/work-orders.module';
 import { FieldSheetPdfDocumentType } from './pdf/field-sheet.pdf-type';
 
 @Module({
-  imports: [RepositoriesModule, OrdenesTrabajoModule],
+  imports: [RepositoriesModule, WorkOrdersModule],
   controllers: [RoutesController],
   providers: [
     RoutesService,
@@ -45,7 +45,6 @@ import { FieldSheetPdfDocumentType } from './pdf/field-sheet.pdf-type';
     DeleteRouteUseCase,
     ReassignRouteUseCase,
     ExportFieldSheetPdfUseCase,
-    OrdenesTrabajoModule,
   ],
 })
 export class RoutesModule implements OnModuleInit {

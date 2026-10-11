@@ -4,22 +4,27 @@ import { OrdenesTrabajoController } from './interfaces/http/ordenes-trabajo.cont
 import { FindOrdenesByRutaUseCase } from './application/use-cases/find-ordenes-by-ruta.use-case';
 import { UpdateOrdenEstadoUseCase } from './application/use-cases/update-orden-estado.use-case';
 import { LinkLecturaUseCase } from './application/use-cases/link-lectura.use-case';
-import { RepositoriesModule } from './repositories.module';
+import { OrdenTrabajoRepository } from './domain/repositories/orden-trabajo.repository';
+import { PrismaOrdenTrabajoRepository } from './infrastructure/repositories/prisma-orden-trabajo.repository';
 
 @Module({
-  imports: [RepositoriesModule],
   controllers: [OrdenesTrabajoController],
   providers: [
     OrdenesTrabajoService,
     FindOrdenesByRutaUseCase,
     UpdateOrdenEstadoUseCase,
     LinkLecturaUseCase,
+    {
+      provide: OrdenTrabajoRepository,
+      useClass: PrismaOrdenTrabajoRepository,
+    },
   ],
   exports: [
     OrdenesTrabajoService,
     FindOrdenesByRutaUseCase,
     UpdateOrdenEstadoUseCase,
     LinkLecturaUseCase,
+    OrdenTrabajoRepository,
   ],
 })
-export class OrdenesTrabajoModule {}
+export class WorkOrdersModule {}

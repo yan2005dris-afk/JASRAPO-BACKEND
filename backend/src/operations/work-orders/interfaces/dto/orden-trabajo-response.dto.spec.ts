@@ -1,5 +1,5 @@
 import { OrderWorkResponseDto } from './orden-trabajo-response.dto';
-import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
+import { ordenTrabajoRow } from 'src/operations/routes/__test-utils__/route-row.factory';
 
 describe('OrderWorkResponseDto', () => {
   it('serializes bigint identifiers as API-safe strings', () => {

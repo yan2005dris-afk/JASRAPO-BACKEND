@@ -21,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
 import { RoutesService } from '../../application/routes.service';
-import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
+import { OrdenesTrabajoService } from 'src/operations/work-orders/application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { CreateRouteAssignmentsDto } from '../dto/create-route-assignments.dto';
@@ -29,12 +29,12 @@ import { UpdateRouteDto } from '../dto/update-route.dto';
 import { ReassignRouteDto } from '../dto/reassign-route.dto';
 import { FilterReadingsDto } from '../dto/filter-readings.dto';
 import { FindAllRoutesDto } from '../dto/find-all-routes.dto';
-import { FindOrdenesByRutaDto } from '../dto/find-ordenes-by-ruta.dto';
+import { FindOrdenesByRutaDto } from 'src/operations/work-orders/interfaces/dto/find-ordenes-by-ruta.dto';
 import {
   RouteResponseDto,
   ReadingForRouteResponseDto,
 } from '../dto/route-response.dto';
-import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
+import { OrderWorkResponseDto } from 'src/operations/work-orders/interfaces/dto/orden-trabajo-response.dto';
 import { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { RouteFilters } from '../../domain/types/route.types';
 import { ApiPaginatedResponse } from 'src/shared/pagination/api-paginated-response.decorator';

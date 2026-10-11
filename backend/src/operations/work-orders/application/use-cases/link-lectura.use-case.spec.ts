@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LinkLecturaUseCase } from './link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
-import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
+import { ordenTrabajoRow } from 'src/operations/routes/__test-utils__/route-row.factory';
 
 describe('LinkLecturaUseCase', () => {
   let useCase: LinkLecturaUseCase;

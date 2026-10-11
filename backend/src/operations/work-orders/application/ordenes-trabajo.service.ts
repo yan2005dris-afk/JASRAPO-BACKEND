@@ -3,7 +3,7 @@ import { FindOrdenesByRutaUseCase } from './use-cases/find-ordenes-by-ruta.use-c
 import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-case';
 import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
-import type { OrdenTrabajoRow } from '../infrastructure/repositories/route.include';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type {
   OrdenTrabajoFilters,

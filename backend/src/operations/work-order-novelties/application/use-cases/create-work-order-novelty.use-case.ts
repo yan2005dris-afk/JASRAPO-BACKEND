@@ -9,7 +9,7 @@ import {
   type WorkOrderNoveltyRepository,
 } from '../../domain/repositories/work-order-novelty.repository';
 import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
-import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositories/orden-trabajo.repository';
+import { OrdenTrabajoRepository } from 'src/operations/work-orders/domain/repositories/orden-trabajo.repository';
 import {
   StorageService,
   SRI_STORAGE_TYPES,

@@ -12,7 +12,7 @@ import {
   TipoActividadCodes,
 } from 'src/shared/enums';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { ordenTrabajoInclude, type OrdenTrabajoRow } from './route.include';
+import { ordenTrabajoInclude, type OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
 import {
   paginate,
   PaginateOptions,

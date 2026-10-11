@@ -1,6 +1,6 @@
 import { Controller, Patch, Param, Body } from '@nestjs/common';
-import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
-import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
+import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { ParseBigIntPipe } from 'src/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,

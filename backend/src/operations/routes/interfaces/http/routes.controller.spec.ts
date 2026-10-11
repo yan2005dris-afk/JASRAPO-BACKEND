@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RoutesController } from './routes.controller';
 import { RoutesService } from '../../application/routes.service';
-import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
+import { OrdenesTrabajoService } from 'src/operations/work-orders/application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 import {
   routeRow,

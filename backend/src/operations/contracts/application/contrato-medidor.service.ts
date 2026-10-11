@@ -16,7 +16,7 @@ import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pd
 import type { ContractRow } from '../infrastructure/repositories/contract.include';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
-import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
+import { OrdenTrabajoRepository } from 'src/operations/work-orders/domain/repositories/orden-trabajo.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
 import type { RouteRow } from '../../routes/infrastructure/repositories/route.include';

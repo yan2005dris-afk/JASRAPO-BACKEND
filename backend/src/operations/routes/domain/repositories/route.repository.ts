@@ -9,7 +9,7 @@ import type {
   UpdateRouteData,
   RouteFilters,
 } from '../types/route.types';
-import type { LecturaKpis } from '../types/orden-trabajo.types';
+import type { LecturaKpis } from 'src/operations/work-orders/domain/types/orden-trabajo.types';
 
 /**
  * Cross-module lookup interfaces — minimal shapes for domain validation.

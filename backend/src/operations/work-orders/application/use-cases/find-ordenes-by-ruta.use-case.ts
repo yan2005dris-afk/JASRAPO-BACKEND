@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
-import { RouteRepository } from '../../domain/repositories/route.repository';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
+import { RouteRepository } from 'src/operations/routes/domain/repositories/route.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type { PaginatedResult } from 'src/shared/pagination/pagination.types';
 import type { OrdenTrabajoFilters } from '../../domain/types/orden-trabajo.types';
