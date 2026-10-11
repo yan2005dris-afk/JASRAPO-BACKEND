@@ -31,10 +31,9 @@ WHERE NOT EXISTS (
     AND p."accion" = new_perm.accion
 );
 
--- 2. Grant `work_orders:update` to the roles that actually need to mutate
---    work orders from the web admin and the mobile operator channels.
---    `admin(1)` already receives every permission through the dev seed loop;
---    this branch covers `secretaria(2)` and `operadores(5)`.
+-- 2. Grant `work_orders:update` and `work_orders:read` to the roles that need them.
+--    `admin(1)` receives every permission through the dev seed loop;
+--    `secretaria(2)` needs read + update, and `operadores(5)` needs read (catalogos / sync) + update.
 --    `rol_permisos` carries `@@unique([rolId, permisoId])`, so ON CONFLICT
 --    is safe here.
 INSERT INTO "rol_permisos" ("rol_id", "permiso_id")
@@ -42,7 +41,7 @@ SELECT r."rol_id", p."permiso_id"
 FROM "roles" r
 CROSS JOIN "permisos" p
 WHERE p."recurso" = 'work_orders'
-  AND p."accion" = 'update'
+  AND p."accion" IN ('read', 'update')
   AND r."rol_id" IN (2, 5)
 ON CONFLICT ("rol_id", "permiso_id") DO NOTHING;
 

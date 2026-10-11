@@ -80,6 +80,7 @@ export async function seedRolePermissions(
   const operadorPermissionKeys = new Set([
     'operator-sync:read', // paginated offline manifest
     'routes:read', // listar rutas asignadas
+    'work_orders:read', // consultar catalogo activity-types y work orders
     'work_orders:update', // actualizar work orders desde la app móvil
     'lecturas:read', // ver lecturas asignadas
     'lecturas:update', // modificar lectura (PENDIENTE → POR_REVISION)
