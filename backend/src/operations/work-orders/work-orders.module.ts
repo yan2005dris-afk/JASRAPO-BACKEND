@@ -6,8 +6,10 @@ import { UpdateOrdenEstadoUseCase } from './application/use-cases/update-orden-e
 import { LinkLecturaUseCase } from './application/use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from './domain/repositories/orden-trabajo.repository';
 import { PrismaOrdenTrabajoRepository } from './infrastructure/repositories/prisma-orden-trabajo.repository';
+import { RepositoriesModule } from '../routes/repositories.module';
 
 @Module({
+  imports: [RepositoriesModule],
   controllers: [OrdenesTrabajoController],
   providers: [
     OrdenesTrabajoService,
