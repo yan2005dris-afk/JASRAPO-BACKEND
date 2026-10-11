@@ -25,7 +25,6 @@ import type {
   OrdenTrabajoFilters,
   OrdenTrabajoKpis,
   UpdateOrdenEstadoData,
-  LinkLecturaData,
   CreateOrdenTrabajoData,
   UpdateOperatorWorkOrderData,
 } from '../../domain/types/orden-trabajo.types';
@@ -506,70 +505,6 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         estadoCobranza: EstadoCobranzaContrato.AL_DIA,
       },
     });
-  }
-
-  async linkLectura(
-    ordenTrabajoId: bigint,
-    data: LinkLecturaData,
-  ): Promise<OrdenTrabajoRow> {
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const orden = await tx.ordenesTrabajo.findUnique({
-          include: {
-            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-          },
-          where: { ordenTrabajoId },
-        });
-
-        if (!orden) {
-          throw new EntityNotFoundException(
-            'Orden de Trabajo',
-            ordenTrabajoId.toString(),
-          );
-        }
-
-        const lectura = await tx.lecturas.findUnique({
-          where: { lecturaId: data.lecturaId },
-        });
-
-        if (!lectura) {
-          throw new EntityNotFoundException(
-            'Lectura',
-            data.lecturaId.toString(),
-          );
-        }
-
-        // Integridad de dominio: si la orden tiene un medidor asociado, la
-        // lectura debe pertenecer al mismo medidor. Una lectura no se puede
-        // vincular a una orden de un medidor distinto.
-        if (orden.medidorId !== null && orden.medidorId !== lectura.medidorId) {
-          throw new InvalidDomainOperationException(
-            `La lectura pertenece al medidor ${lectura.medidorId} pero la orden requiere el medidor ${orden.medidorId}`,
-          );
-        }
-
-        // Operación PURA: solo escribe `lecturaId`. Si el caller quiere
-        // marcar la orden como completada, debe invocar `updateEstado`.
-        return await tx.ordenesTrabajo.update({
-          include: ordenTrabajoInclude,
-          where: { ordenTrabajoId },
-          data: {
-            lecturaId: data.lecturaId,
-          },
-        });
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new EntityNotFoundException(
-          'Orden de Trabajo',
-          ordenTrabajoId.toString(),
-        );
-      }
-      throw error;
-    }
   }
 
   async create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoRow> {

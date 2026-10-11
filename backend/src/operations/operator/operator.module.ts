@@ -13,6 +13,7 @@ import { MeterModule } from 'src/metering/meters/meter.module';
 import { ReadingModule } from 'src/metering/readings/reading.module';
 import { RepositoriesModule } from 'src/operations/routes/repositories.module';
 import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/work-order-novelties.module';
+import { WorkOrdersModule } from '../work-orders/work-orders.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/wo
     ReadingModule,
     WorkOrderNoveltiesModule,
     RepositoriesModule,
+    WorkOrdersModule,
   ],
   controllers: [OperatorController, OperatorNoveltiesController],
   providers: [

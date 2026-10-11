@@ -10,10 +10,6 @@ export interface UpdateOrdenEstadoData {
   resultadoObservacion?: string;
 }
 
-export interface LinkLecturaData {
-  lecturaId: bigint;
-}
-
 export interface CreateOrdenTrabajoData {
   rutaId: bigint;
   contratoId: bigint;

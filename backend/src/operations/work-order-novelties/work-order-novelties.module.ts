@@ -13,9 +13,10 @@ import { PrismaWorkOrderNoveltyRepository } from './infrastructure/repositories/
 import { NoveltyEvidenceQueueService } from './infrastructure/novelty-evidence-queue.service';
 
 import { RepositoriesModule } from '../routes/repositories.module';
+import { WorkOrdersModule } from '../work-orders/work-orders.module';
 
 @Module({
-  imports: [StorageModule, JobsModule, RepositoriesModule],
+  imports: [StorageModule, JobsModule, RepositoriesModule, WorkOrdersModule],
   controllers: [WorkOrderNoveltyController],
   providers: [
     WorkOrderNoveltyService,

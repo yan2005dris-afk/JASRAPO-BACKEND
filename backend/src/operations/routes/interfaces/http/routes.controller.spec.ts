@@ -31,7 +31,6 @@ describe('RoutesController', () => {
   const mockOrdenestrabajoService = {
     findByRutaId: jest.fn(),
     updateEstado: jest.fn(),
-    linkLectura: jest.fn(),
   };
 
   const sampleRoute = routeRow({
