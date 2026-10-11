@@ -2,7 +2,7 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EstadoOrdenTrabajo } from 'src/shared/enums';
 
-export class UpdateOrdenEstadoDto {
+export class UpdateOrdenTrabajoDto {
   @ApiProperty({
     description: 'Nuevo estado de la orden de trabajo',
     enum: EstadoOrdenTrabajo,

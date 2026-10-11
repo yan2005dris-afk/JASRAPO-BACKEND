@@ -92,8 +92,4 @@ export class RoutesService {
   async getPeriodos() {
     return this.routeRepository.findAllPeriodos();
   }
-
-  async getTiposActividad() {
-    return this.routeRepository.findAllTiposActividad();
-  }
 }

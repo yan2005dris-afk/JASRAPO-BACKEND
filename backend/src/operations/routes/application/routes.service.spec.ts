@@ -48,7 +48,6 @@ describe('RoutesService', () => {
           provide: RouteRepository,
           useValue: {
             findAllPeriodos: jest.fn(),
-            findAllTiposActividad: jest.fn(),
           },
         },
         {
@@ -215,24 +214,5 @@ describe('RoutesService', () => {
 
     expect(routeRepository.findAllPeriodos).toHaveBeenCalled();
     expect(res).toEqual(mockPeriodos);
-  });
-
-  it('getTiposActividad should delegate to RouteRepository.findAllTiposActividad', async () => {
-    const mockTipos = [
-      {
-        tipoActividadId: 1,
-        codigo: 'LECTURA',
-        nombre: 'Lectura',
-        activo: true,
-      },
-    ];
-    (routeRepository.findAllTiposActividad as jest.Mock).mockResolvedValue(
-      mockTipos,
-    );
-
-    const res = await service.getTiposActividad();
-
-    expect(routeRepository.findAllTiposActividad).toHaveBeenCalled();
-    expect(res).toEqual(mockTipos);
   });
 });

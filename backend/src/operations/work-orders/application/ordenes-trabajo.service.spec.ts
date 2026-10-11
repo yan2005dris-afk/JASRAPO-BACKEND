@@ -4,6 +4,7 @@ import { OrdenesTrabajoService } from './ordenes-trabajo.service';
 import { FindOrdenesByRutaUseCase } from './use-cases/find-ordenes-by-ruta.use-case';
 import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ordenTrabajoRow } from 'src/operations/routes/__test-utils__/route-row.factory';
 import type {
   PaginatedResult,
@@ -48,10 +49,17 @@ describe('OrdenesTrabajoService', () => {
     },
   });
 
+  const mockPrisma = {
+    tipoActividad: {
+      findMany: jest.fn(),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdenesTrabajoService,
+        { provide: PrismaService, useValue: mockPrisma },
         { provide: OrdenTrabajoRepository, useValue: {} },
         { provide: FindOrdenesByRutaUseCase, useValue: mockUseCase },
         { provide: UpdateOrdenEstadoUseCase, useValue: mockUseCase },
@@ -87,6 +95,53 @@ describe('OrdenesTrabajoService', () => {
         pagination,
       });
       expect(result).toBe(paginated);
+    });
+  });
+
+  describe('getActivityTypes', () => {
+    it('should return canonical activity types ordered by id and with icono coerced to null when missing', async () => {
+      mockPrisma.tipoActividad.findMany.mockResolvedValue([
+        {
+          tipoActividadId: 1n,
+          codigo: 'LECTURA',
+          nombre: 'Lectura',
+          descripcion: 'Toma de lectura',
+          activo: true,
+        },
+        {
+          tipoActividadId: 2n,
+          codigo: 'CORTE',
+          nombre: 'Corte',
+          descripcion: null,
+          icono: 'icon-corte',
+          activo: true,
+        },
+      ]);
+
+      const result = await service.getActivityTypes();
+
+      expect(mockPrisma.tipoActividad.findMany).toHaveBeenCalledWith({
+        where: { activo: true },
+        orderBy: { tipoActividadId: 'asc' },
+      });
+      expect(result).toEqual([
+        {
+          tipoActividadId: 1,
+          codigo: 'LECTURA',
+          nombre: 'Lectura',
+          descripcion: 'Toma de lectura',
+          icono: null,
+          activo: true,
+        },
+        {
+          tipoActividadId: 2,
+          codigo: 'CORTE',
+          nombre: 'Corte',
+          descripcion: null,
+          icono: 'icon-corte',
+          activo: true,
+        },
+      ]);
     });
   });
 

@@ -37,7 +37,6 @@ import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-re
 import { TipoActividadCodes } from 'src/shared/enums';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { GetOperatorSyncManifestUseCase } from '../../application/use-cases/get-operator-sync-manifest.use-case';
-import { GetOperatorActivityTypesUseCase } from '../../application/use-cases/get-operator-activity-types.use-case';
 import { OperatorSyncManifestDto } from '../dto/operator-sync-manifest.dto';
 import {
   uploadReadingPhoto,
@@ -112,23 +111,7 @@ export class OperatorController {
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
     private readonly storageService: StorageService,
     private readonly getOperatorSyncManifestUseCase: GetOperatorSyncManifestUseCase,
-    private readonly getOperatorActivityTypesUseCase: GetOperatorActivityTypesUseCase,
   ) {}
-
-  @ApiOperation({
-    summary: 'Obtener tipos de actividad',
-    description: 'Retorna la lista de tipos de actividad disponibles',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de tipos de actividad',
-  })
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @RequiredPermission('routes', 'read')
-  @Get('activity-types')
-  async getActivityTypes() {
-    return this.getOperatorActivityTypesUseCase.execute();
-  }
 
   @ApiOperation({
     summary: 'Actualizar orden de trabajo del operario',
@@ -170,7 +153,7 @@ export class OperatorController {
   @ApiResponse(operatorErrorResponse(403, 'Orden fuera de la ruta asignada'))
   @ApiResponse(operatorErrorResponse(404, 'Orden no encontrada'))
   @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
-  @RequiredPermission('routes', 'update')
+  @RequiredPermission('work_orders', 'update')
   @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
   @Patch('work-orders/:id')
   async updateOperatorWorkOrder(

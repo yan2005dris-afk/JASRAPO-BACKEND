@@ -64,6 +64,15 @@ describe('OperatorController work-order update', () => {
     ).toEqual('sync/manifest');
   });
 
+  it('protects work-orders update with work_orders:update', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSION_KEY,
+        OperatorController.prototype.updateOperatorWorkOrder,
+      ),
+    ).toEqual({ recurso: 'work_orders', accion: 'update' });
+  });
+
   it('wires the paginated sync manifest to the authenticated operator', async () => {
     const manifest = {
       execute: jest.fn().mockResolvedValue({ complete: true }),
